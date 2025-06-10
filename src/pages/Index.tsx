@@ -1,8 +1,37 @@
-
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Upload, Send, DollarSign, Package, Clock, CheckCircle, User, Menu, X, Camera, FileText } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import UserMenu from '@/components/UserMenu';
 
 const Index = () => {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect to auth page if not authenticated
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/auth');
+    }
+  }, [user, loading, navigate]);
+
+  // Show loading while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Package className="h-12 w-12 text-blue-600 mx-auto mb-4 animate-spin" />
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated (will redirect)
+  if (!user) {
+    return null;
+  }
+
   const [activeTab, setActiveTab] = useState('inquiries');
   const [inquiries, setInquiries] = useState([
     {
@@ -127,10 +156,7 @@ const Index = () => {
                 <p className="text-blue-100 text-sm">Materials Sales Platform</p>
               </div>
             </div>
-            <div className="flex items-center space-x-3 bg-blue-500 bg-opacity-50 rounded-lg px-3 py-2">
-              <User className="h-6 w-6" />
-              <span className="text-sm font-medium">John Engineer</span>
-            </div>
+            <UserMenu />
           </div>
         </div>
       </div>
