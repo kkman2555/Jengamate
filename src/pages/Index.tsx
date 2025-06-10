@@ -62,7 +62,13 @@ const Index = () => {
       projectName: newInquiry.projectName,
       status: 'Pending',
       date: new Date().toISOString().split('T')[0],
-      products: newInquiry.products.filter(p => p.type && p.quantity),
+      products: newInquiry.products
+        .filter(p => p.type && p.quantity)
+        .map(p => ({
+          type: p.type,
+          quantity: parseInt(p.quantity) || 0,
+          unit: getDefaultUnit(p.type)
+        })),
       totalAmount: 0,
       commission: 0
     };
@@ -78,14 +84,14 @@ const Index = () => {
     setShowNewInquiry(false);
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'Pending': return 'bg-yellow-100 text-yellow-800';
-      case 'Quoted': return 'bg-blue-100 text-blue-800';
-      case 'Paid': return 'bg-green-100 text-green-800';
-      case 'Shipped': return 'bg-purple-100 text-purple-800';
-      case 'Completed': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+  const getDefaultUnit = (productType) => {
+    switch (productType) {
+      case 'Steel Beams': return 'pieces';
+      case 'Cement': return 'bags';
+      case 'Rebar': return 'pieces';
+      case 'Pipes': return 'pieces';
+      case 'Concrete Blocks': return 'pieces';
+      default: return 'units';
     }
   };
 
