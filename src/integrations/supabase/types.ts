@@ -9,6 +9,110 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      inquiries: {
+        Row: {
+          commission: number | null
+          created_at: string | null
+          delivery_address: string | null
+          expected_date: string | null
+          id: string
+          inquiry_number: string
+          needs_transport: boolean | null
+          products: Json | null
+          project_name: string
+          status: string | null
+          total_amount: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          commission?: number | null
+          created_at?: string | null
+          delivery_address?: string | null
+          expected_date?: string | null
+          id?: string
+          inquiry_number: string
+          needs_transport?: boolean | null
+          products?: Json | null
+          project_name: string
+          status?: string | null
+          total_amount?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          commission?: number | null
+          created_at?: string | null
+          delivery_address?: string | null
+          expected_date?: string | null
+          id?: string
+          inquiry_number?: string
+          needs_transport?: boolean | null
+          products?: Json | null
+          project_name?: string
+          status?: string | null
+          total_amount?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      orders: {
+        Row: {
+          commission: number | null
+          commission_paid: boolean | null
+          created_at: string | null
+          delivery_date: string | null
+          id: string
+          inquiry_id: string | null
+          order_number: string
+          paid_amount: number | null
+          project_name: string
+          status: string | null
+          total_amount: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          commission?: number | null
+          commission_paid?: boolean | null
+          created_at?: string | null
+          delivery_date?: string | null
+          id?: string
+          inquiry_id?: string | null
+          order_number: string
+          paid_amount?: number | null
+          project_name: string
+          status?: string | null
+          total_amount: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          commission?: number | null
+          commission_paid?: boolean | null
+          created_at?: string | null
+          delivery_date?: string | null
+          id?: string
+          inquiry_id?: string | null
+          order_number?: string
+          paid_amount?: number | null
+          project_name?: string
+          status?: string | null
+          total_amount?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_inquiry_id_fkey"
+            columns: ["inquiry_id"]
+            isOneToOne: false
+            referencedRelation: "inquiries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           company_name: string | null
@@ -39,15 +143,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _user_id: string
+          _role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -162,6 +293,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const

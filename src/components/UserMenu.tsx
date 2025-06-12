@@ -2,12 +2,16 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
-import { User, LogOut, Building } from 'lucide-react';
+import { useUserRole } from '@/hooks/useUserRole';
+import { User, LogOut, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 const UserMenu = () => {
   const { user, signOut } = useAuth();
+  const { isAdmin } = useUserRole();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleSignOut = async () => {
     try {
@@ -25,6 +29,10 @@ const UserMenu = () => {
     }
   };
 
+  const handleAdminClick = () => {
+    navigate('/admin');
+  };
+
   if (!user) return null;
 
   return (
@@ -33,6 +41,17 @@ const UserMenu = () => {
       <div className="flex flex-col">
         <span className="text-sm font-medium">{user.email}</span>
       </div>
+      {isAdmin && (
+        <Button
+          onClick={handleAdminClick}
+          variant="ghost"
+          size="icon"
+          className="text-white hover:bg-blue-600 h-8 w-8"
+          title="Admin Dashboard"
+        >
+          <Shield className="h-4 w-4" />
+        </Button>
+      )}
       <Button
         onClick={handleSignOut}
         variant="ghost"
