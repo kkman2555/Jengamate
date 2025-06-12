@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, FileText, Package, DollarSign, Settings, Shield } from 'lucide-react';
@@ -96,21 +97,31 @@ const Admin = () => {
           email,
           full_name,
           company_name,
-          created_at,
-          user_roles(role)
+          created_at
         `)
         .order('created_at', { ascending: false });
 
       if (usersError) throw usersError;
 
-      const formattedUsers = usersData?.map(user => ({
-        ...user,
-        role: user.user_roles?.[0]?.role || 'user'
-      })) || [];
+      // Fetch user roles separately
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role');
+
+      if (rolesError) throw rolesError;
+
+      // Combine users with their roles
+      const formattedUsers = usersData?.map(user => {
+        const userRole = rolesData?.find(role => role.user_id === user.id);
+        return {
+          ...user,
+          role: userRole?.role || 'user'
+        };
+      }) || [];
 
       setUsers(formattedUsers);
 
-      // Fetch inquiries
+      // Fetch inquiries - since there's no direct relation to profiles, we'll handle this differently
       const { data: inquiriesData, error: inquiriesError } = await supabase
         .from('inquiries')
         .select(`
@@ -120,15 +131,31 @@ const Admin = () => {
           status,
           total_amount,
           user_id,
-          created_at,
-          profiles(full_name, email)
+          created_at
         `)
         .order('created_at', { ascending: false });
 
       if (inquiriesError) throw inquiriesError;
-      setInquiries(inquiriesData || []);
 
-      // Fetch orders
+      // Get profile data for inquiries
+      const inquiriesWithProfiles = await Promise.all(
+        (inquiriesData || []).map(async (inquiry) => {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('full_name, email')
+            .eq('id', inquiry.user_id)
+            .single();
+
+          return {
+            ...inquiry,
+            profiles: profileData || { full_name: '', email: '' }
+          };
+        })
+      );
+
+      setInquiries(inquiriesWithProfiles);
+
+      // Fetch orders - same approach
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select(`
@@ -141,13 +168,29 @@ const Admin = () => {
           commission,
           commission_paid,
           user_id,
-          created_at,
-          profiles(full_name, email)
+          created_at
         `)
         .order('created_at', { ascending: false });
 
       if (ordersError) throw ordersError;
-      setOrders(ordersData || []);
+
+      // Get profile data for orders
+      const ordersWithProfiles = await Promise.all(
+        (ordersData || []).map(async (order) => {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('full_name, email')
+            .eq('id', order.user_id)
+            .single();
+
+          return {
+            ...order,
+            profiles: profileData || { full_name: '', email: '' }
+          };
+        })
+      );
+
+      setOrders(ordersWithProfiles);
 
     } catch (error) {
       console.error('Error fetching data:', error);
