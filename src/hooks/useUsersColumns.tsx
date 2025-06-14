@@ -19,7 +19,7 @@ export const useUsersColumns = (
         () => [
             {
                 accessorKey: 'checkbox',
-                header: () => (
+                header: (
                     <input
                         type="checkbox"
                         aria-label="Select all"
