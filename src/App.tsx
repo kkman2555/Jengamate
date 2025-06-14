@@ -10,6 +10,7 @@ import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import Inquiries from "./pages/Inquiries";
 import InquiriesNew from "./pages/InquiriesNew";
+import InquiryDetails from "./pages/InquiryDetails";
 import Orders from "./pages/Orders";
 import Analytics from "./pages/Analytics";
 import Profile from "./pages/Profile";
@@ -40,6 +41,7 @@ const App = () => (
             {/* Existing other routes */}
             <Route path="/inquiries" element={<Inquiries />} />
             <Route path="/inquiries/new" element={<InquiriesNew />} />
+            <Route path="/inquiries/:id" element={<InquiryDetails />} />
             <Route path="/orders" element={<Orders />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/update-password" element={<UpdatePassword />} />

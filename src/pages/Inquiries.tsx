@@ -87,7 +87,7 @@ const Inquiries = () => {
                   </div>
                 </CardContent>
                 <CardFooter>
-                    <Button variant="outline" className="w-full" disabled>View Details</Button>
+                    <Button variant="outline" className="w-full" onClick={() => navigate(`/inquiries/${inquiry.id}`)}>View Details</Button>
                 </CardFooter>
               </Card>
             ))}
