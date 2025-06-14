@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState } from 'react';
 import { DataTable } from '@/components/ui/data-table';
 import { Button } from '@/components/ui/button';
@@ -109,16 +108,29 @@ const InquiriesTab = ({ inquiries, onRefresh }: InquiriesTabProps) => {
         accessorKey: 'actions',
         header: 'Actions',
         cell: (row: Inquiry) => (
-          <select
-            value={row.status}
-            onChange={(e) => updateInquiryStatus(row.id, e.target.value)}
-            className="text-xs border rounded px-2 py-1"
-          >
-            <option value="Pending">Pending</option>
-            <option value="Quoted">Quoted</option>
-            <option value="Accepted">Accepted</option>
-            <option value="Rejected">Rejected</option>
-          </select>
+          <div className="flex gap-2 items-center">
+            <select
+              value={row.status}
+              onChange={(e) => updateInquiryStatus(row.id, e.target.value)}
+              className="text-xs border rounded px-2 py-1"
+            >
+              <option value="Pending">Pending</option>
+              <option value="Quoted">Quoted</option>
+              <option value="Accepted">Accepted</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+            {/* Show Accept & Create Order only for Pending/Quoted */}
+            {(row.status === "Pending" || row.status === "Quoted") && (
+              <button
+                onClick={() => acceptAndCreateOrder(row)}
+                className="ml-1 text-xs px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                title="Accept inquiry and create order"
+                type="button"
+              >
+                Accept & Create Order
+              </button>
+            )}
+          </div>
         )
       }
     ],
@@ -144,6 +156,46 @@ const InquiriesTab = ({ inquiries, onRefresh }: InquiriesTabProps) => {
         title: "Error",
         description: "Failed to update inquiry status. Please try again.",
         variant: "destructive"
+      });
+    }
+  }
+
+  const acceptAndCreateOrder = async (row: Inquiry) => {
+    try {
+      // Step 1: Update inquiry status to 'Accepted'
+      const { error: inquiryUpdateError } = await supabase
+        .from("inquiries")
+        .update({ status: "Accepted" })
+        .eq("id", row.id);
+
+      if (inquiryUpdateError) throw inquiryUpdateError;
+
+      // Step 2: Create new order from inquiry
+      const { error: orderError } = await supabase.from("orders").insert({
+        inquiry_id: row.id,
+        order_number: `ORD-${(Math.random() * 1000000).toFixed(0)}`, // Simple order number for demo
+        project_name: row.project_name,
+        status: "Pending",
+        total_amount: row.total_amount ?? 0,
+        paid_amount: 0,
+        commission: 0,
+        commission_paid: false,
+        user_id: row.user_id,
+      });
+
+      if (orderError) throw orderError;
+
+      toast({
+        title: "Order Created",
+        description: "Inquiry accepted and order created successfully.",
+      });
+      onRefresh();
+    } catch (error) {
+      console.error("Error accepting inquiry and creating order:", error);
+      toast({
+        title: "Error",
+        description: "There was a problem creating the order. Try again.",
+        variant: "destructive",
       });
     }
   }

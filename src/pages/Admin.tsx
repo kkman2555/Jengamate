@@ -74,7 +74,10 @@ const Admin = ({ initialTab }: AdminProps) => {
           </p>
         </div>
 
-        <AdminTabs activeTab={activeTab} onTabChange={setActiveTab} />
+        <AdminTabs
+          activeTab={activeTab}
+          onTabChange={(tabId: 'users' | 'inquiries' | 'orders') => setActiveTab(tabId)}
+        />
 
         {loading ? (
           <div className="text-center py-8">
