@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -8,8 +8,32 @@ import { ProfileForm } from '@/components/profile/ProfileForm';
 import { AccountInfo } from '@/components/profile/AccountInfo';
 
 const Profile = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, updateUserMetadata } = useAuth();
   const { profile, loading: profileLoading, refetchProfile } = useProfile();
+
+  useEffect(() => {
+    if (!profile || !user || !user.user_metadata) return;
+
+    const metadata = {
+      full_name: user.user_metadata.full_name || '',
+      company_name: user.user_metadata.company_name || ''
+    };
+
+    const profileData = {
+      full_name: profile.full_name || '',
+      company_name: profile.company_name || ''
+    };
+
+    const needsUpdate = metadata.full_name !== profileData.full_name ||
+                        metadata.company_name !== profileData.company_name;
+
+    if (needsUpdate) {
+      updateUserMetadata({
+        full_name: profile.full_name,
+        company_name: profile.company_name
+      });
+    }
+  }, [profile, user, updateUserMetadata]);
 
   // Show loading if either auth or profile is loading
   if (authLoading || profileLoading) {
