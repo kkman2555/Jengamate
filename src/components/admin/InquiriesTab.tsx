@@ -40,6 +40,9 @@ const InquiriesTab = ({ inquiries, onRefresh }: InquiriesTabProps) => {
   const { toast } = useToast();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
+  // Helper to determine if all rows are selected
+  const allSelected = selectedIds.length === inquiries.length && inquiries.length > 0;
+
   const handleSelectAll = (checked: boolean, visibleRows: Inquiry[]) => {
     if (checked) {
       setSelectedIds(visibleRows.map(row => row.id));
@@ -58,15 +61,7 @@ const InquiriesTab = ({ inquiries, onRefresh }: InquiriesTabProps) => {
     () => [
       {
         accessorKey: 'checkbox',
-        header: (
-          <input
-            type="checkbox"
-            aria-label="Select all"
-            onChange={(e) => handleSelectAll(e.target.checked, inquiries)}
-            checked={selectedIds.length === inquiries.length && inquiries.length > 0}
-            className="accent-blue-600 w-4 h-4"
-          />
-        ),
+        header: '', // The header must be a string (empty means no label)
         cell: (row: Inquiry) => (
           <input
             type="checkbox"
@@ -182,6 +177,7 @@ const InquiriesTab = ({ inquiries, onRefresh }: InquiriesTabProps) => {
     });
   };
 
+  // Render the table header with custom actions/checkbox if needed
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -196,6 +192,19 @@ const InquiriesTab = ({ inquiries, onRefresh }: InquiriesTabProps) => {
       </div>
 
       <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+        {/* Custom select all checkbox above the table if queries exist */}
+        {inquiries.length > 0 && (
+          <div className="flex items-center px-4 py-2 border-b">
+            <input
+              type="checkbox"
+              aria-label="Select all"
+              onChange={(e) => handleSelectAll(e.target.checked, inquiries)}
+              checked={allSelected}
+              className="accent-blue-600 w-4 h-4 mr-2"
+            />
+            <span className="text-xs text-muted-foreground">Select All</span>
+          </div>
+        )}
         <DataTable
           columns={columns}
           data={inquiries}
