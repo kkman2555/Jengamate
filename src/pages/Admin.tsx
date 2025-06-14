@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminData } from '@/hooks/useAdminData';
-import AdminHeader from '@/components/admin/AdminHeader';
+import { AppLayout } from '@/components/layout/AppLayout';
 import AdminTabs from '@/components/admin/AdminTabs';
 import UsersTab from '@/components/admin/UsersTab';
 import InquiriesTab from '@/components/admin/InquiriesTab';
@@ -53,11 +53,17 @@ const Admin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <AdminHeader onBackToApp={() => navigate('/')} />
-      <AdminTabs activeTab={activeTab} onTabChange={setActiveTab} />
+    <AppLayout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
+          <p className="text-muted-foreground">
+            Manage users, inquiries, and orders across the platform
+          </p>
+        </div>
 
-      <div className="px-4 py-6 max-w-7xl mx-auto">
+        <AdminTabs activeTab={activeTab} onTabChange={setActiveTab} />
+
         {loading ? (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
@@ -77,7 +83,7 @@ const Admin = () => {
           </>
         )}
       </div>
-    </div>
+    </AppLayout>
   );
 };
 
