@@ -71,6 +71,7 @@ const InquiriesTab = ({ inquiries, onRefresh }: InquiriesTabProps) => {
             onClick={e => e.stopPropagation()}
           />
         ),
+        enableSorting: false,
       },
       {
         accessorKey: 'inquiry_number',
@@ -131,7 +132,8 @@ const InquiriesTab = ({ inquiries, onRefresh }: InquiriesTabProps) => {
               </button>
             )}
           </div>
-        )
+        ),
+        enableSorting: false,
       }
     ],
     [inquiries, selectedIds]

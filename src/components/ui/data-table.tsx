@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Search, ArrowUpDown, ArrowDown, ArrowUp } from 'lucide-react';
 
 interface Column<T> {
-  accessorKey: keyof T & string;
+  accessorKey: string;
   header: string;
   cell?: (row: T) => React.ReactNode;
   enableSorting?: boolean;
@@ -51,8 +51,8 @@ export function DataTable<T extends Record<string, any>>({
     if (!sorting) return filteredData;
 
     return [...filteredData].sort((a, b) => {
-      const aValue = a[sorting.id];
-      const bValue = b[sorting.id];
+      const aValue = a[sorting.id as keyof T];
+      const bValue = b[sorting.id as keyof T];
 
       if (aValue === null || aValue === undefined) return 1;
       if (bValue === null || bValue === undefined) return -1;

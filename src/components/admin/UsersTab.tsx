@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
@@ -70,6 +69,7 @@ const UsersTab = ({ users, onRefresh }: UsersTabProps) => {
             onClick={e => e.stopPropagation()}
           />
         ),
+        enableSorting: false,
       },
       {
         accessorKey: 'full_name',
@@ -113,6 +113,7 @@ const UsersTab = ({ users, onRefresh }: UsersTabProps) => {
             Make {row.role === 'admin' ? 'User' : 'Admin'}
           </Button>
         ),
+        enableSorting: false,
       },
     ],
     [users, selectedIds]
