@@ -8,10 +8,11 @@ import { ProfileForm } from '@/components/profile/ProfileForm';
 import { AccountInfo } from '@/components/profile/AccountInfo';
 
 const Profile = () => {
-  const { user } = useAuth();
-  const { profile, loading, refetchProfile } = useProfile();
+  const { user, loading: authLoading } = useAuth();
+  const { profile, loading: profileLoading, refetchProfile } = useProfile();
 
-  if (loading) {
+  // Show loading if either auth or profile is loading
+  if (authLoading || profileLoading) {
     return (
       <AppLayout>
         <div className="flex items-center justify-center py-8">
@@ -22,11 +23,23 @@ const Profile = () => {
     );
   }
 
-  if (!user || !profile) {
+  // Show error if no user is authenticated
+  if (!user) {
     return (
       <AppLayout>
         <div className="text-center py-8">
-          <p className="text-muted-foreground">Unable to load profile data.</p>
+          <p className="text-muted-foreground">Please log in to view your profile.</p>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  // Show error if profile failed to load
+  if (!profile) {
+    return (
+      <AppLayout>
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">Unable to load profile data. Please try refreshing the page.</p>
         </div>
       </AppLayout>
     );

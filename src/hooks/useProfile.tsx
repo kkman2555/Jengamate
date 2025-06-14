@@ -20,14 +20,20 @@ export const useProfile = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async () => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     try {
+      setLoading(true);
+      console.log('Fetching profile for user:', user.id);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching profile:', error);
@@ -39,9 +45,41 @@ export const useProfile = () => {
         return;
       }
 
-      setProfile(data);
+      if (!data) {
+        console.log('No profile found, creating one...');
+        // Create profile if it doesn't exist
+        const { data: newProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            email: user.email || '',
+            full_name: '',
+            company_name: ''
+          })
+          .select()
+          .single();
+
+        if (createError) {
+          console.error('Error creating profile:', createError);
+          toast({
+            title: "Error",
+            description: "Failed to create profile.",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        setProfile(newProfile);
+      } else {
+        setProfile(data);
+      }
     } catch (error) {
       console.error('Error fetching profile:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred while loading profile.",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
@@ -50,6 +88,9 @@ export const useProfile = () => {
   useEffect(() => {
     if (user) {
       fetchProfile();
+    } else {
+      setLoading(false);
+      setProfile(null);
     }
   }, [user]);
 
