@@ -3,7 +3,7 @@ import React from 'react';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from './AppSidebar';
 import { Breadcrumbs } from './Breadcrumbs';
-import { UserMenu } from '../UserMenu';
+import UserMenu from '../UserMenu';
 
 interface AppLayoutProps {
   children: React.ReactNode;
