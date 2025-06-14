@@ -77,7 +77,6 @@ const OrdersTab = ({ orders, onRefresh }: OrdersTabProps) => {
   return (
     <div className="space-y-6">
       <h2 className="text-3xl font-bold text-gray-900">Order Management</h2>
-      
       <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
         <Table>
           <TableHeader>
@@ -89,6 +88,7 @@ const OrdersTab = ({ orders, onRefresh }: OrdersTabProps) => {
               <TableHead>Amount</TableHead>
               <TableHead>Paid</TableHead>
               <TableHead>Commission</TableHead>
+              <TableHead>Receipt</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -103,11 +103,11 @@ const OrdersTab = ({ orders, onRefresh }: OrdersTabProps) => {
                     {order.status}
                   </span>
                 </TableCell>
-                <TableCell>${order.total_amount?.toLocaleString()}</TableCell>
-                <TableCell>${order.paid_amount?.toLocaleString() || 0}</TableCell>
+                <TableCell>₹{order.total_amount?.toLocaleString()}</TableCell>
+                <TableCell>₹{order.paid_amount?.toLocaleString() || 0}</TableCell>
                 <TableCell>
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm">${order.commission?.toLocaleString() || 0}</span>
+                    <span className="text-sm">₹{order.commission?.toLocaleString() || 0}</span>
                     <Button
                       onClick={() => toggleCommissionPaid(order.id, order.commission_paid)}
                       variant="outline"
@@ -119,6 +119,19 @@ const OrdersTab = ({ orders, onRefresh }: OrdersTabProps) => {
                       {order.commission_paid ? 'Paid' : 'Mark Paid'}
                     </Button>
                   </div>
+                </TableCell>
+                <TableCell>
+                  {order.receipt_url ? (
+                    <div className="flex flex-col gap-1 text-xs">
+                      <a href={order.receipt_url} target="_blank" rel="noopener noreferrer" className="text-blue-700 underline">
+                        View
+                      </a>
+                      <div>Ref: {order.payment_reference || "--"}</div>
+                      <div>Date: {order.payment_date ? order.payment_date : "--"}</div>
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground">Not uploaded</span>
+                  )}
                 </TableCell>
                 <TableCell>
                   <select
