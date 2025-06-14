@@ -25,7 +25,16 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            {/* Route for Admin main page */}
             <Route path="/admin" element={<Admin />} />
+            {/* Add direct route for /admin/users, pass tab info as state */}
+            <Route
+              path="/admin/users"
+              element={
+                <Admin initialTab="users" />
+              }
+            />
+            {/* Existing other routes */}
             <Route path="/inquiries" element={<Inquiries />} />
             <Route path="/inquiries/new" element={<InquiriesNew />} />
             <Route path="/orders" element={<Orders />} />

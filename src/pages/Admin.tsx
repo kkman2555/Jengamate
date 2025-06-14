@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield } from 'lucide-react';
@@ -11,14 +10,27 @@ import AdminTabs from '@/components/admin/AdminTabs';
 import UsersTab from '@/components/admin/UsersTab';
 import InquiriesTab from '@/components/admin/InquiriesTab';
 import OrdersTab from '@/components/admin/OrdersTab';
+import { useLocation } from 'react-router-dom';
 
-const Admin = () => {
+interface AdminProps {
+  initialTab?: 'users' | 'inquiries' | 'orders';
+}
+
+const Admin = ({ initialTab }: AdminProps) => {
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, loading: roleLoading } = useUserRole();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { users, inquiries, orders, loading, refetch } = useAdminData();
-  const [activeTab, setActiveTab] = useState('users');
+  const location = useLocation();
+
+  // Use tab from props, or fallback to tab in location.state, or default "users"
+  const tabFromState = location.state && typeof location.state === "object" && "activeTab" in location.state
+    ? location.state.activeTab
+    : undefined;
+  const [activeTab, setActiveTab] = useState<'users' | 'inquiries' | 'orders'>(
+    initialTab || tabFromState || 'users'
+  );
 
   useEffect(() => {
     if (!authLoading && !user) {
