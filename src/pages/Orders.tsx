@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ShoppingCart } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserRole } from '@/hooks/useUserRole';
 import { format } from "date-fns";
 import { OrderPaymentModal } from "@/components/orders/OrderPaymentModal";
 
@@ -26,20 +27,28 @@ type BasicOrder = {
 
 const Orders = () => {
   const { user } = useAuth();
+  const { isAdmin, loading: roleLoading } = useUserRole();
   const [orders, setOrders] = useState<BasicOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [openModal, setOpenModal] = useState<{ open: boolean, orderId?: string }>({ open: false });
 
   async function fetchOrders() {
     setLoading(true);
-    const { data, error } = await supabase
+
+    // If admin, fetch all orders. If regular user, only fetch own orders.
+    let query = supabase
       .from('orders')
       .select(`
         id, order_number, project_name, status, total_amount, paid_amount,
-        commission, commission_paid, receipt_url, payment_reference, payment_date, created_at
+        commission, commission_paid, receipt_url, payment_reference, payment_date, created_at, user_id
       `)
-      .eq('user_id', user?.id)
       .order('created_at', { ascending: false });
+
+    if (!isAdmin && user) {
+      query = query.eq('user_id', user.id);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       setLoading(false);
@@ -49,7 +58,11 @@ const Orders = () => {
     setLoading(false);
   }
 
-  useEffect(() => { if (user) fetchOrders(); }, [user]);
+  useEffect(() => {
+    if (!user || roleLoading) return;
+    fetchOrders();
+    // eslint-disable-next-line
+  }, [user, isAdmin, roleLoading]);
 
   return (
     <AppLayout>
@@ -59,6 +72,11 @@ const Orders = () => {
           <p className="text-muted-foreground">
             Track and manage your orders and payments
           </p>
+          {isAdmin && (
+            <div className="my-2 p-2 rounded bg-yellow-100 text-yellow-900 text-sm inline-flex items-center gap-2">
+              <span>Admin Mode: Viewing all orders</span>
+            </div>
+          )}
         </div>
         <Card>
           <CardHeader>
@@ -156,3 +174,4 @@ const Orders = () => {
 };
 
 export default Orders;
+
