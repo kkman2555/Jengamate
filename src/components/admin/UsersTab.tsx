@@ -22,7 +22,14 @@ const UsersTab = ({ users, onRefresh }: UsersTabProps) => {
     handleExportCSV,
   } = useUserManagement(users, onRefresh);
 
-  const columns = useUsersColumns(selectedIds, handleSelectRow, toggleUserRole);
+  const columns = useUsersColumns(
+    selectedIds, 
+    handleSelectRow, 
+    toggleUserRole,
+    allSelected,
+    handleSelectAll,
+    users
+  );
 
   return (
     <div className="space-y-6">
@@ -33,18 +40,6 @@ const UsersTab = ({ users, onRefresh }: UsersTabProps) => {
       />
 
       <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
-        {users.length > 0 && (
-          <div className="flex items-center px-4 py-2 border-b">
-            <input
-              type="checkbox"
-              aria-label="Select all"
-              onChange={(e) => handleSelectAll(e.target.checked, users)}
-              checked={allSelected}
-              className="accent-blue-600 w-4 h-4 mr-2"
-            />
-            <span className="text-xs text-muted-foreground">Select All</span>
-          </div>
-        )}
         <DataTable
           columns={columns}
           data={users}
