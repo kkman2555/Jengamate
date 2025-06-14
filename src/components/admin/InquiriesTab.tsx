@@ -76,7 +76,9 @@ const InquiriesTab = ({ inquiries, onRefresh }: InquiriesTabProps) => {
                     {inquiry.status}
                   </span>
                 </TableCell>
-                <TableCell>${inquiry.total_amount?.toLocaleString() || 0}</TableCell>
+                <TableCell>
+                  TSh{inquiry.total_amount?.toLocaleString() || 0}
+                </TableCell>
                 <TableCell>{new Date(inquiry.created_at).toLocaleDateString()}</TableCell>
                 <TableCell>
                   <select
@@ -100,3 +102,4 @@ const InquiriesTab = ({ inquiries, onRefresh }: InquiriesTabProps) => {
 };
 
 export default InquiriesTab;
+

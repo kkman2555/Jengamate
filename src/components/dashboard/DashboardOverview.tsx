@@ -82,7 +82,7 @@ const RecentActivityItem = ({ activity }: { activity: ActivityItem }) => {
   
   const description = is_inquiry 
     ? `${activity.inquiry_number} - ${activity.project_name}`
-    : `${activity.order_number} - ₹${new Intl.NumberFormat('en-IN').format(activity.total_amount || 0)}`;
+    : `${activity.order_number} - TSh${new Intl.NumberFormat('en-IN').format(activity.total_amount || 0)}`;
 
   return (
     <div className="flex items-center space-x-4">
@@ -137,7 +137,7 @@ export function DashboardOverview() {
         />
         <MetricCard
           title="Total Revenue"
-          value={`₹${new Intl.NumberFormat('en-IN').format(data.totalRevenue)}`}
+          value={`TSh${new Intl.NumberFormat('en-IN').format(data.totalRevenue)}`}
           description="from all orders"
           icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />}
         />

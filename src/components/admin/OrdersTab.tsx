@@ -103,11 +103,11 @@ const OrdersTab = ({ orders, onRefresh }: OrdersTabProps) => {
                     {order.status}
                   </span>
                 </TableCell>
-                <TableCell>₹{order.total_amount?.toLocaleString()}</TableCell>
-                <TableCell>₹{order.paid_amount?.toLocaleString() || 0}</TableCell>
+                <TableCell>TSh{order.total_amount?.toLocaleString()}</TableCell>
+                <TableCell>TSh{order.paid_amount?.toLocaleString() || 0}</TableCell>
                 <TableCell>
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm">₹{order.commission?.toLocaleString() || 0}</span>
+                    <span className="text-sm">TSh{order.commission?.toLocaleString() || 0}</span>
                     <Button
                       onClick={() => toggleCommissionPaid(order.id, order.commission_paid)}
                       variant="outline"
@@ -155,3 +155,4 @@ const OrdersTab = ({ orders, onRefresh }: OrdersTabProps) => {
 };
 
 export default OrdersTab;
+

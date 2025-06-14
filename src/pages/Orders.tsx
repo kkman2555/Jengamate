@@ -95,8 +95,8 @@ const Orders = () => {
                         <td className="px-3 py-2 border font-medium">{order.order_number}</td>
                         <td className="px-3 py-2 border">{order.project_name}</td>
                         <td className="px-3 py-2 border">{order.status}</td>
-                        <td className="px-3 py-2 border">₹{order.total_amount?.toLocaleString()}</td>
-                        <td className="px-3 py-2 border">₹{order.commission?.toLocaleString()}</td>
+                        <td className="px-3 py-2 border">TSh{order.total_amount?.toLocaleString()}</td>
+                        <td className="px-3 py-2 border">TSh{order.commission?.toLocaleString()}</td>
                         <td className="px-3 py-2 border">
                           {order.receipt_url ? (
                             <div className="flex flex-col gap-1">
