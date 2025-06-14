@@ -1,10 +1,16 @@
 import React, { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { DataTable } from '@/components/ui/data-table';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { User } from '@/types/admin';
-import { Users as UsersIcon, Download } from 'lucide-react';
+import { Users as UsersIcon, Download, ChevronDown } from 'lucide-react';
 
 interface UsersTabProps {
   users: User[];
@@ -152,6 +158,42 @@ const UsersTab = ({ users, onRefresh }: UsersTabProps) => {
     }
   };
 
+  const handleBulkUpdateRole = async (newRole: 'admin' | 'user') => {
+    try {
+      const usersToUpdate = users.filter(user => selectedIds.includes(user.id) && user.role !== newRole);
+
+      if (usersToUpdate.length === 0) {
+        toast({ title: "No changes needed", description: `All selected users already have the '${newRole}' role.` });
+        return;
+      }
+
+      if (newRole === 'admin') {
+        const records = usersToUpdate.map(u => ({ user_id: u.id, role: 'admin' as const }));
+        const { error } = await supabase.from('user_roles').upsert(records, { onConflict: 'user_id, role' });
+        if (error) throw error;
+      } else { // newRole === 'user'
+        const userIdsToDeleteRole = usersToUpdate.map(u => u.id);
+        const { error } = await supabase.from('user_roles').delete().in('user_id', userIdsToDeleteRole).eq('role', 'admin');
+        if (error) throw error;
+      }
+
+      toast({
+        title: "Success",
+        description: `${usersToUpdate.length} user role(s) updated to ${newRole}.`,
+      });
+      setSelectedIds([]);
+      onRefresh();
+
+    } catch (error) {
+      console.error('Error bulk updating user roles:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update user roles. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleExportCSV = () => {
     const filterRows = selectedIds.length
       ? users.filter(row => selectedIds.includes(row.id))
@@ -186,10 +228,30 @@ const UsersTab = ({ users, onRefresh }: UsersTabProps) => {
           <UsersIcon className="h-6 w-6 text-purple-600" />
           User Management
         </h2>
-        <Button variant="outline" onClick={handleExportCSV}>
-          <Download className="mr-2 h-4 w-4" />
-          Export CSV
-        </Button>
+        <div className="flex items-center space-x-2">
+          {selectedIds.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  Bulk Actions ({selectedIds.length})
+                  <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => handleBulkUpdateRole('admin')}>
+                  Make Admin
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleBulkUpdateRole('user')}>
+                  Make User
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+          <Button variant="outline" onClick={handleExportCSV}>
+            <Download className="mr-2 h-4 w-4" />
+            Export CSV
+          </Button>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
