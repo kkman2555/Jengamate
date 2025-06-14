@@ -4,16 +4,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { FileText, ShoppingCart, TrendingUp, Users, Plus, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useDashboardData, ActivityItem } from '@/hooks/useDashboardData';
+import { Skeleton } from '@/components/ui/skeleton';
+import { format } from 'date-fns';
 
 interface MetricCardProps {
   title: string;
   value: string | number;
   description: string;
   icon: React.ReactNode;
-  trend?: string;
 }
 
-function MetricCard({ title, value, description, icon, trend }: MetricCardProps) {
+function MetricCard({ title, value, description, icon }: MetricCardProps) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -23,15 +25,87 @@ function MetricCard({ title, value, description, icon, trend }: MetricCardProps)
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
         <p className="text-xs text-muted-foreground">
-          {trend && <span className="text-green-600">{trend}</span>} {description}
+          {description}
         </p>
       </CardContent>
     </Card>
   );
 }
 
+const DashboardLoadingSkeleton = () => (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <div>
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-4 w-80 mt-2" />
+      </div>
+      <Skeleton className="h-10 w-36" />
+    </div>
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {[...Array(4)].map((_, i) => (
+        <Card key={i}>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-4" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-7 w-12 mb-2" />
+            <Skeleton className="h-3 w-32" />
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+    <div className="grid gap-6 md:grid-cols-2">
+      <Card>
+        <CardHeader><Skeleton className="h-6 w-32" /></CardHeader>
+        <CardContent className="space-y-2">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader><Skeleton className="h-6 w-32" /></CardHeader>
+        <CardContent className="space-y-4">
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-8 w-full" />
+        </CardContent>
+      </Card>
+    </div>
+  </div>
+);
+
+const RecentActivityItem = ({ activity }: { activity: ActivityItem }) => {
+  const is_inquiry = activity.type === 'inquiry';
+  const title = is_inquiry ? 'New inquiry submitted' : 'New order created';
+  
+  const description = is_inquiry 
+    ? `${activity.inquiry_number} - ${activity.project_name}`
+    : `${activity.order_number} - ₹${new Intl.NumberFormat('en-IN').format(activity.total_amount || 0)}`;
+
+  return (
+    <div className="flex items-center space-x-4">
+      <div className={`w-2 h-2 rounded-full ${is_inquiry ? 'bg-blue-600' : 'bg-green-600'}`}></div>
+      <div className="text-sm flex-1">
+        <p className="font-medium">{title}</p>
+        <p className="text-muted-foreground truncate">{description}</p>
+        <p className="text-xs text-muted-foreground">
+          by {activity.profiles?.full_name || 'Unknown'} on {format(new Date(activity.created_at!), 'PPP')}
+        </p>
+      </div>
+    </div>
+  )
+};
+
+
 export function DashboardOverview() {
   const navigate = useNavigate();
+  const { data, loading } = useDashboardData();
+
+  if (loading || !data) {
+    return <DashboardLoadingSkeleton />;
+  }
 
   return (
     <div className="space-y-6">
@@ -42,7 +116,7 @@ export function DashboardOverview() {
             Welcome to your engineering commission management platform
           </p>
         </div>
-        <Button onClick={() => navigate('/inquiries')} className="gap-2">
+        <Button onClick={() => navigate('/inquiries/new')} className="gap-2">
           <Plus className="h-4 w-4" />
           New Inquiry
         </Button>
@@ -51,30 +125,26 @@ export function DashboardOverview() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           title="Total Inquiries"
-          value="24"
-          description="from last month"
-          trend="+20.1%"
+          value={data.totalInquiries}
+          description="in total"
           icon={<FileText className="h-4 w-4 text-muted-foreground" />}
         />
         <MetricCard
           title="Active Orders"
-          value="12"
+          value={data.activeOrders}
           description="currently processing"
-          trend="+15%"
           icon={<ShoppingCart className="h-4 w-4 text-muted-foreground" />}
         />
         <MetricCard
           title="Total Revenue"
-          value="₹2,45,000"
-          description="this month"
-          trend="+25%"
+          value={`₹${new Intl.NumberFormat('en-IN').format(data.totalRevenue)}`}
+          description="from all orders"
           icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />}
         />
         <MetricCard
           title="Active Users"
-          value="48"
+          value={data.activeUsers}
           description="engineers registered"
-          trend="+5%"
           icon={<Users className="h-4 w-4 text-muted-foreground" />}
         />
       </div>
@@ -89,7 +159,7 @@ export function DashboardOverview() {
             <Button 
               variant="outline" 
               className="w-full justify-start gap-2"
-              onClick={() => navigate('/inquiries')}
+              onClick={() => navigate('/inquiries/new')}
             >
               <Plus className="h-4 w-4" />
               Create New Inquiry
@@ -119,29 +189,17 @@ export function DashboardOverview() {
             <CardDescription>Latest system updates</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center space-x-4">
-                <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-                <div className="text-sm">
-                  <p className="font-medium">New inquiry submitted</p>
-                  <p className="text-muted-foreground">INQ-2025-001 - Steel Structure Project</p>
-                </div>
+            {data.recentActivity.length > 0 ? (
+              <div className="space-y-4">
+                {data.recentActivity.map((activity) => (
+                  <RecentActivityItem key={activity.id} activity={activity} />
+                ))}
               </div>
-              <div className="flex items-center space-x-4">
-                <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                <div className="text-sm">
-                  <p className="font-medium">Order payment received</p>
-                  <p className="text-muted-foreground">SO-2025-012 - ₹85,000</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-4">
-                <div className="w-2 h-2 bg-yellow-600 rounded-full"></div>
-                <div className="text-sm">
-                  <p className="font-medium">Commission processed</p>
-                  <p className="text-muted-foreground">₹12,500 for Engineer ID: ENG-001</p>
-                </div>
-              </div>
-            </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-8">
+                No recent activity to display.
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
