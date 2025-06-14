@@ -53,8 +53,8 @@ export const useProfile = () => {
           .insert({
             id: user.id,
             email: user.email || '',
-            full_name: '',
-            company_name: ''
+            full_name: user.user_metadata?.full_name || '',
+            company_name: user.user_metadata?.company_name || ''
           })
           .select()
           .single();
