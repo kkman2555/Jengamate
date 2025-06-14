@@ -153,7 +153,7 @@ const InquiryDetails = () => {
                 </CardHeader>
                 <CardContent>
                     <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                        {Array.isArray(inquiry.products) && inquiry.products.length > 0 && inquiry.products[0] ? inquiry.products[0] : "No description provided."}
+                        {Array.isArray(inquiry.products) && inquiry.products.length > 0 && typeof inquiry.products[0] === 'string' && inquiry.products[0] ? inquiry.products[0] : "No description provided."}
                     </p>
                 </CardContent>
             </Card>
