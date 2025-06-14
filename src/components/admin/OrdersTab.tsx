@@ -121,11 +121,13 @@ const OrdersTab = ({ orders, onRefresh }: OrdersTabProps) => {
                   </div>
                 </TableCell>
                 <TableCell>
-                  {order.receipt_url ? (
+                  {(order as any).receipt_urls && (order as any).receipt_urls.length > 0 ? (
                     <div className="flex flex-col gap-1 text-xs">
-                      <a href={order.receipt_url} target="_blank" rel="noopener noreferrer" className="text-blue-700 underline">
-                        View
-                      </a>
+                      {(order as any).receipt_urls.map((url: string, index: number) => (
+                        <a key={index} href={url} target="_blank" rel="noopener noreferrer" className="text-blue-700 underline">
+                          View Receipt #{index + 1}
+                        </a>
+                      ))}
                       <div>Ref: {order.payment_reference || "--"}</div>
                       <div>Date: {order.payment_date ? order.payment_date : "--"}</div>
                     </div>
@@ -155,4 +157,3 @@ const OrdersTab = ({ orders, onRefresh }: OrdersTabProps) => {
 };
 
 export default OrdersTab;
-

@@ -19,7 +19,7 @@ type BasicOrder = {
   paid_amount: number;
   commission: number;
   commission_paid: boolean;
-  receipt_url?: string;
+  receipt_urls?: string[];
   payment_reference?: string;
   payment_date?: string | null;
   created_at: string;
@@ -40,7 +40,7 @@ const Orders = () => {
       .from('orders')
       .select(`
         id, order_number, project_name, status, total_amount, paid_amount,
-        commission, commission_paid, receipt_url, payment_reference, payment_date, created_at, user_id
+        commission, commission_paid, receipt_urls, payment_reference, payment_date, created_at, user_id
       `)
       .order('created_at', { ascending: false });
 
@@ -116,11 +116,13 @@ const Orders = () => {
                         <td className="px-3 py-2 border">TSh{order.total_amount?.toLocaleString()}</td>
                         <td className="px-3 py-2 border">TSh{order.commission?.toLocaleString()}</td>
                         <td className="px-3 py-2 border">
-                          {order.receipt_url ? (
+                          {order.receipt_urls && order.receipt_urls.length > 0 ? (
                             <div className="flex flex-col gap-1">
-                              <a href={order.receipt_url} target="_blank" rel="noopener noreferrer" className="text-blue-700 underline text-xs">
-                                View Receipt
-                              </a>
+                              {order.receipt_urls.map((url, index) => (
+                                <a key={index} href={url} target="_blank" rel="noopener noreferrer" className="text-blue-700 underline text-xs">
+                                  View Receipt {index + 1}
+                                </a>
+                              ))}
                               <span className="text-xs">Ref: {order.payment_reference || "--"}</span>
                               <span className="text-xs">Date: {order.payment_date ? format(new Date(order.payment_date), "PPP") : "--"}</span>
                             </div>
@@ -129,7 +131,7 @@ const Orders = () => {
                           )}
                         </td>
                         <td className="px-3 py-2 border">
-                          {!order.receipt_url && (
+                          {(!order.receipt_urls || order.receipt_urls.length === 0) && (
                             <Button
                               size="sm"
                               variant="outline"
@@ -174,4 +176,3 @@ const Orders = () => {
 };
 
 export default Orders;
-
