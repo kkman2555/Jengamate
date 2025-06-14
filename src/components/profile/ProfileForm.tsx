@@ -18,9 +18,10 @@ interface ProfileFormProps {
   initialData: ProfileFormData;
   userId: string;
   onUpdate: () => void;
+  updateUserMetadata: (metadata: { full_name?: string; company_name?: string }) => Promise<{ error: any }>;
 }
 
-export const ProfileForm = ({ initialData, userId, onUpdate }: ProfileFormProps) => {
+export const ProfileForm = ({ initialData, userId, onUpdate, updateUserMetadata }: ProfileFormProps) => {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState(initialData);
@@ -35,7 +36,7 @@ export const ProfileForm = ({ initialData, userId, onUpdate }: ProfileFormProps)
   const handleSave = async () => {
     setSaving(true);
     try {
-      const { error } = await supabase
+      const { error: profileError } = await supabase
         .from('profiles')
         .update({
           full_name: formData.full_name,
@@ -44,6 +45,13 @@ export const ProfileForm = ({ initialData, userId, onUpdate }: ProfileFormProps)
           updated_at: new Date().toISOString()
         })
         .eq('id', userId);
+
+      const { error: metadataError } = await updateUserMetadata({
+        full_name: formData.full_name,
+        company_name: formData.company_name
+      });
+
+      const error = profileError || metadataError;
 
       if (error) {
         console.error('Error updating profile:', error);
