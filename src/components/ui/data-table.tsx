@@ -10,12 +10,13 @@ import {
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, ArrowUpDown, ArrowDown, ArrowUp } from 'lucide-react';
 
 interface Column<T> {
-  accessorKey: string;
+  accessorKey: keyof T & string;
   header: string;
   cell?: (row: T) => React.ReactNode;
+  enableSorting?: boolean;
 }
 
 interface DataTableProps<T> {
@@ -33,6 +34,7 @@ export function DataTable<T extends Record<string, any>>({
 }: DataTableProps<T>) {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [currentPage, setCurrentPage] = React.useState(1);
+  const [sorting, setSorting] = React.useState<{ id: string; desc: boolean } | null>(null);
   const itemsPerPage = 10;
 
   const filteredData = React.useMemo(() => {
@@ -44,11 +46,28 @@ export function DataTable<T extends Record<string, any>>({
       )
     );
   }, [data, searchTerm]);
+  
+  const sortedData = React.useMemo(() => {
+    if (!sorting) return filteredData;
+
+    return [...filteredData].sort((a, b) => {
+      const aValue = a[sorting.id];
+      const bValue = b[sorting.id];
+
+      if (aValue === null || aValue === undefined) return 1;
+      if (bValue === null || bValue === undefined) return -1;
+      
+      if (aValue < bValue) return sorting.desc ? 1 : -1;
+      if (aValue > bValue) return sorting.desc ? -1 : 1;
+      
+      return 0;
+    });
+  }, [filteredData, sorting]);
 
   const paginatedData = React.useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
-    return filteredData.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredData, currentPage]);
+    return sortedData.slice(startIndex, startIndex + itemsPerPage);
+  }, [sortedData, currentPage]);
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
@@ -72,7 +91,32 @@ export function DataTable<T extends Record<string, any>>({
           <TableHeader>
             <TableRow>
               {columns.map((column) => (
-                <TableHead key={column.accessorKey}>{column.header}</TableHead>
+                <TableHead key={column.accessorKey}>
+                   <Button
+                    variant="ghost"
+                    className="px-2 py-1"
+                    disabled={column.enableSorting === false}
+                    onClick={() => {
+                      if (column.enableSorting === false) return;
+                      if (sorting?.id === column.accessorKey) {
+                        setSorting({ id: column.accessorKey, desc: !sorting.desc });
+                      } else {
+                        setSorting({ id: column.accessorKey, desc: false });
+                      }
+                    }}
+                  >
+                    {column.header}
+                    {column.enableSorting !== false && (
+                      <div className="ml-2">
+                        {sorting?.id === column.accessorKey ? (
+                          sorting.desc ? <ArrowDown className="h-4 w-4" /> : <ArrowUp className="h-4 w-4" />
+                        ) : (
+                          <ArrowUpDown className="h-4 w-4 text-muted-foreground/50" />
+                        )}
+                      </div>
+                    )}
+                  </Button>
+                </TableHead>
               ))}
             </TableRow>
           </TableHeader>
