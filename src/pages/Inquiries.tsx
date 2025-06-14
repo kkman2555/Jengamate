@@ -1,11 +1,12 @@
-
 import React from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, FileText } from 'lucide-react';
+import { useNavigate } from "react-router-dom";
 
 const Inquiries = () => {
+  const navigate = useNavigate();
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -16,7 +17,7 @@ const Inquiries = () => {
               Manage your project inquiries and quotations
             </p>
           </div>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => navigate("/inquiries/new")}>
             <Plus className="h-4 w-4" />
             New Inquiry
           </Button>
