@@ -1,27 +1,8 @@
-
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { User } from '@/types/admin';
-
-// This CSV export helper is moved from UsersTab.tsx
-// Note: This function has a minor bug from the original code where it might not correctly handle JSX in cells.
-// For now, it is kept as-is to maintain original functionality.
-function toCSV(rows: any[], columns: any[]) {
-  const escapeCSV = (val: any) =>
-    `"${String(val ?? '').replace(/"/g, '""')}"`;
-  const header = columns.map((c) => escapeCSV(c.header)).join(',');
-  const body = rows
-    .map((row) =>
-      columns
-        .map((col) =>
-          escapeCSV(col.cell ? col.cell(row) : row[col.accessorKey])
-        )
-        .join(',')
-    )
-    .join('\n');
-  return header + '\n' + body;
-}
+import { exportToCSV } from '@/lib/csv';
 
 export const useUserManagement = (users: User[], onRefresh: () => void) => {
     const { toast } = useToast();
@@ -112,30 +93,15 @@ export const useUserManagement = (users: User[], onRefresh: () => void) => {
     }, [users, selectedIds, onRefresh, toast]);
     
     const handleExportCSV = useCallback((columns: any[]) => {
-        const filterRows = selectedIds.length
+        const rowsToExport = selectedIds.length
         ? users.filter(row => selectedIds.includes(row.id))
         : users;
 
-        const coreColumns = columns.filter(
-            (col) =>
-                !["checkbox", "actions"].includes(
-                    typeof col.accessorKey === "string" ? col.accessorKey : ""
-                )
-        );
-        const csv = toCSV(filterRows, coreColumns);
-        const blob = new Blob([csv], { type: "text/csv" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "users.csv";
-        document.body.appendChild(a);
-        a.click();
-        URL.revokeObjectURL(url);
-        document.body.removeChild(a);
+        exportToCSV(rowsToExport, columns, "users.csv");
 
         toast({
             title: "Exported",
-            description: `Downloaded ${filterRows.length} users as CSV.`,
+            description: `Downloaded ${rowsToExport.length} users as CSV.`,
         });
     }, [users, selectedIds, toast]);
 
