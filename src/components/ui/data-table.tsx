@@ -14,7 +14,7 @@ import { ChevronLeft, ChevronRight, Search, ArrowUpDown, ArrowDown, ArrowUp } fr
 
 interface Column<T> {
   accessorKey: string;
-  header: string;
+  header: React.ReactNode;
   cell?: (row: T) => React.ReactNode;
   enableSorting?: boolean;
 }
@@ -92,30 +92,34 @@ export function DataTable<T extends Record<string, any>>({
             <TableRow>
               {columns.map((column) => (
                 <TableHead key={column.accessorKey}>
-                   <Button
-                    variant="ghost"
-                    className="px-2 py-1"
-                    disabled={column.enableSorting === false}
-                    onClick={() => {
-                      if (column.enableSorting === false) return;
-                      if (sorting?.id === column.accessorKey) {
-                        setSorting({ id: column.accessorKey, desc: !sorting.desc });
-                      } else {
-                        setSorting({ id: column.accessorKey, desc: false });
-                      }
-                    }}
-                  >
-                    {column.header}
-                    {column.enableSorting !== false && (
-                      <div className="ml-2">
-                        {sorting?.id === column.accessorKey ? (
-                          sorting.desc ? <ArrowDown className="h-4 w-4" /> : <ArrowUp className="h-4 w-4" />
-                        ) : (
-                          <ArrowUpDown className="h-4 w-4 text-muted-foreground/50" />
-                        )}
-                      </div>
-                    )}
-                  </Button>
+                  {typeof column.header === 'string' ? (
+                    <Button
+                      variant="ghost"
+                      className="px-2 py-1"
+                      disabled={column.enableSorting === false}
+                      onClick={() => {
+                        if (column.enableSorting === false) return;
+                        if (sorting?.id === column.accessorKey) {
+                          setSorting({ id: column.accessorKey, desc: !sorting.desc });
+                        } else {
+                          setSorting({ id: column.accessorKey, desc: false });
+                        }
+                      }}
+                    >
+                      {column.header}
+                      {column.enableSorting !== false && (
+                        <div className="ml-2">
+                          {sorting?.id === column.accessorKey ? (
+                            sorting.desc ? <ArrowDown className="h-4 w-4" /> : <ArrowUp className="h-4 w-4" />
+                          ) : (
+                            <ArrowUpDown className="h-4 w-4 text-muted-foreground/50" />
+                          )}
+                        </div>
+                      )}
+                    </Button>
+                  ) : (
+                    column.header
+                  )}
                 </TableHead>
               ))}
             </TableRow>

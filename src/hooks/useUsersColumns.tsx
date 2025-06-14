@@ -1,4 +1,3 @@
-
 import { useMemo } from 'react';
 import { User } from '@/types/admin';
 import { Button } from '@/components/ui/button';
@@ -29,12 +28,12 @@ export const useUsersColumns = (
                         className="accent-blue-600 w-4 h-4"
                     />
                 ),
-                cell: ({ row }: { row: { original: User } }) => (
+                cell: (user: User) => (
                     <input
                         type="checkbox"
                         aria-label="Select row"
-                        checked={selectedIds.includes(row.original.id)}
-                        onChange={(e) => handleSelectRow(e.target.checked, row.original.id)}
+                        checked={selectedIds.includes(user.id)}
+                        onChange={(e) => handleSelectRow(e.target.checked, user.id)}
                         className="accent-blue-600 w-4 h-4"
                         onClick={e => e.stopPropagation()}
                     />
@@ -44,43 +43,43 @@ export const useUsersColumns = (
             {
                 accessorKey: 'full_name',
                 header: 'Name',
-                cell: ({ row }: { row: { original: User } }) => row.original.full_name || 'N/A',
+                cell: (user: User) => user.full_name || 'N/A',
             },
             {
                 accessorKey: 'email',
                 header: 'Email',
-                cell: ({ row }: { row: { original: User } }) => row.original.email,
+                cell: (user: User) => user.email,
             },
             {
                 accessorKey: 'company_name',
                 header: 'Company',
-                cell: ({ row }: { row: { original: User } }) => row.original.company_name || 'N/A',
+                cell: (user: User) => user.company_name || 'N/A',
             },
             {
                 accessorKey: 'role',
                 header: 'Role',
-                cell: ({ row }: { row: { original: User } }) => (
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${roleColors[row.original.role]}`}>
-                        {row.original.role}
+                cell: (user: User) => (
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${roleColors[user.role]}`}>
+                        {user.role}
                     </span>
                 )
             },
             {
                 accessorKey: 'created_at',
                 header: 'Joined',
-                cell: ({ row }: { row: { original: User } }) => new Date(row.original.created_at).toLocaleDateString()
+                cell: (user: User) => new Date(user.created_at).toLocaleDateString()
             },
             {
                 accessorKey: 'actions',
                 header: 'Actions',
-                cell: ({ row }: { row: { original: User } }) => (
+                cell: (user: User) => (
                     <Button
-                        onClick={() => toggleUserRole(row.original.id, row.original.role)}
+                        onClick={() => toggleUserRole(user.id, user.role)}
                         variant="outline"
                         size="sm"
                         className="text-xs"
                     >
-                        Make {row.original.role === 'admin' ? 'User' : 'Admin'}
+                        Make {user.role === 'admin' ? 'User' : 'Admin'}
                     </Button>
                 ),
                 enableSorting: false,
