@@ -8,22 +8,29 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserRole } from '@/hooks/useUserRole';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 
 const Inquiries = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isAdmin, loading: roleLoading } = useUserRole();
 
   const { data: inquiries, isLoading } = useQuery({
-    queryKey: ['inquiries', user?.id],
+    queryKey: ['inquiries', user?.id, isAdmin],
     queryFn: async () => {
         if (!user) return [];
-        const { data, error } = await supabase
+        
+        let query = supabase
             .from('inquiries')
-            .select('*')
-            .eq('user_id', user.id)
-            .order('created_at', { ascending: false });
+            .select('*');
+
+        if (!isAdmin) {
+            query = query.eq('user_id', user.id);
+        }
+
+        const { data, error } = await query.order('created_at', { ascending: false });
 
         if (error) {
             console.error("Error fetching inquiries:", error);
@@ -31,18 +38,20 @@ const Inquiries = () => {
         }
         return data;
     },
-    enabled: !!user,
+    enabled: !!user && !roleLoading,
   });
 
   const getStatusVariant = (status: string): "default" | "destructive" | "outline" | "secondary" | null | undefined => {
     switch (status) {
       case 'Pending': return 'default';
       case 'Quoted': return 'outline';
-      case 'Accepted': 'secondary';
+      case 'Accepted': return 'secondary';
       case 'Rejected': return 'destructive';
       default: return 'default';
     }
   };
+  
+  const pageIsLoading = isLoading || roleLoading;
 
   return (
     <AppLayout>
@@ -51,7 +60,7 @@ const Inquiries = () => {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Inquiries</h1>
             <p className="text-muted-foreground">
-              Manage your project inquiries and quotations
+              {isAdmin ? "Review and manage all user inquiries." : "Manage your project inquiries and quotations"}
             </p>
           </div>
           <Button className="gap-2" onClick={() => navigate("/inquiries/new")}>
@@ -60,7 +69,7 @@ const Inquiries = () => {
           </Button>
         </div>
 
-        {isLoading ? (
+        {pageIsLoading ? (
           <div className="flex justify-center items-center py-8">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
@@ -100,12 +109,12 @@ const Inquiries = () => {
                 No Inquiries Found
               </CardTitle>
               <CardDescription>
-                You haven't submitted any inquiries yet.
+                {isAdmin ? "There are no inquiries from any user yet." : "You haven't submitted any inquiries yet."}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="text-center text-muted-foreground py-8">
-                <p>Click "New Inquiry" to get started.</p>
+                <p>{isAdmin ? "" : 'Click "New Inquiry" to get started.'}</p>
               </div>
             </CardContent>
           </Card>
