@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -48,7 +47,7 @@ export function useDashboardData() {
 
       const recentOrdersPromise = supabase
         .from('orders')
-        .select('id, order_number, project_name, status, created_at, user_id, total_amount')
+        .select('id, order_number, project_name, status, created_at, user_id, total_amount, paid_amount, commission, commission_paid')
         .order('created_at', { ascending: false })
         .limit(3);
       
