@@ -1,4 +1,3 @@
-
 export interface User {
   id: string;
   email: string;
@@ -37,4 +36,7 @@ export interface Order {
     full_name: string;
     email: string;
   };
+  receipt_url?: string | null;
+  payment_reference?: string | null;
+  payment_date?: string | null;
 }
