@@ -1,8 +1,9 @@
+
 export interface User {
   id: string;
-  email: string;
-  full_name: string;
-  company_name: string;
+  email: string | undefined;
+  full_name: string | undefined;
+  company_name: string | undefined;
   role: string;
   created_at: string;
 }
@@ -18,7 +19,7 @@ export interface Inquiry {
   profiles: {
     full_name: string;
     email: string;
-  };
+  } | null;
 }
 
 export interface Order {
@@ -35,8 +36,5 @@ export interface Order {
   profiles: {
     full_name: string;
     email: string;
-  };
-  receipt_url?: string | null;
-  payment_reference?: string | null;
-  payment_date?: string | null;
+  } | null;
 }

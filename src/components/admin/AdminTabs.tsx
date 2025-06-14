@@ -1,48 +1,46 @@
 
 import React from 'react';
-import { Users, FileText, Package, LucideIcon } from 'lucide-react';
+import { Users, FileText, ShoppingCart, LucideIcon } from 'lucide-react';
 
 interface Tab {
-  id: string;
+  id: 'users' | 'inquiries' | 'orders';
   label: string;
   icon: LucideIcon;
 }
 
 interface AdminTabsProps {
   activeTab: string;
-  onTabChange: (tabId: string) => void;
+  onTabChange: (tabId: 'users' | 'inquiries' | 'orders') => void;
 }
 
 const AdminTabs = ({ activeTab, onTabChange }: AdminTabsProps) => {
   const tabs: Tab[] = [
     { id: 'users', label: 'Users', icon: Users },
     { id: 'inquiries', label: 'Inquiries', icon: FileText },
-    { id: 'orders', label: 'Orders', icon: Package },
+    { id: 'orders', label: 'Orders', icon: ShoppingCart },
   ];
 
   return (
-    <div className="bg-white border-b border-gray-200 shadow-sm">
-      <div className="px-4">
-        <div className="flex space-x-8">
-          {tabs.map(tab => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => onTabChange(tab.id)}
-                className={`flex items-center space-x-2 py-4 px-3 border-b-2 font-medium text-sm transition-colors ${
-                  activeTab === tab.id
-                    ? 'border-purple-500 text-purple-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+    <div className="border-b">
+      <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => onTabChange(tab.id)}
+            className={`
+              whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
+              flex items-center gap-2
+              ${activeTab === tab.id
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+              }
+            `}
+          >
+            <tab.icon className="h-4 w-4" />
+            {tab.label}
+          </button>
+        ))}
+      </nav>
     </div>
   );
 };

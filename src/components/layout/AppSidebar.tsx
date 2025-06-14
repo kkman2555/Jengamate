@@ -1,4 +1,3 @@
-
 import {
   Sidebar,
   SidebarContent,
@@ -9,7 +8,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { Home, FileText, ShoppingCart, BarChart3, Users, User } from 'lucide-react';
+import { Home, FileText, ShoppingCart, BarChart3, Users, User, Shield } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useUserRole } from '@/hooks/useUserRole';
 
@@ -45,13 +44,14 @@ const adminItems = [
   {
     title: 'Admin Dashboard',
     url: '/admin',
-    icon: Users,
+    icon: Shield,
   },
 ];
 
 export function AppSidebar() {
   const location = useLocation();
   const { isAdmin } = useUserRole();
+  const collapsed = false;
 
   return (
     <Sidebar>
@@ -64,8 +64,8 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={location.pathname === item.url}>
                     <Link to={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
+                      <item.icon className="h-4 w-4" />
+                      {!collapsed && <span>{item.title}</span>}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -83,8 +83,8 @@ export function AppSidebar() {
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={location.pathname.startsWith('/admin')}>
                       <Link to={item.url}>
-                        <item.icon />
-                        <span>{item.title}</span>
+                        <item.icon className="h-4 w-4" />
+                        {!collapsed && <span>{item.title}</span>}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

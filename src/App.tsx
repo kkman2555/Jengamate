@@ -29,16 +29,19 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
-            {/* Route for Admin main page */}
             <Route path="/admin" element={<Admin />} />
-            {/* Add direct route for /admin/users, pass tab info as state */}
             <Route
               path="/admin/users"
-              element={
-                <Admin initialTab="users" />
-              }
+              element={<Admin initialTab="users" />}
             />
-            {/* Existing other routes */}
+            <Route
+              path="/admin/inquiries"
+              element={<Admin initialTab="inquiries" />}
+            />
+            <Route
+              path="/admin/orders"
+              element={<Admin initialTab="orders" />}
+            />
             <Route path="/inquiries" element={<Inquiries />} />
             <Route path="/inquiries/new" element={<InquiriesNew />} />
             <Route path="/inquiries/:id" element={<InquiryDetails />} />
