@@ -81,7 +81,7 @@ const InquiriesTab = ({ inquiries }: InquiriesTabProps) => {
                 <TableCell className="text-right">{inquiry.total_amount.toLocaleString()}</TableCell>
                 <TableCell>{format(new Date(inquiry.created_at), "dd MMM yyyy")}</TableCell>
                 <TableCell className="text-right">
-                  <Button variant="ghost" size="sm" onClick={() => navigate(`/inquiries/${inquiry.id}`)}>
+                  <Button variant="ghost" size="sm" onClick={() => navigate(`/admin/inquiries/${inquiry.id}`)}>
                     View
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>

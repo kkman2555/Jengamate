@@ -17,6 +17,7 @@ import Analytics from "./pages/Analytics";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import UpdatePassword from "./pages/UpdatePassword";
+import AdminInquiryDetails from "./pages/AdminInquiryDetails";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +44,7 @@ const App = () => (
               path="/admin/orders"
               element={<Admin initialTab="orders" />}
             />
+            <Route path="/admin/inquiries/:id" element={<AdminInquiryDetails />} />
             <Route path="/inquiries" element={<Inquiries />} />
             <Route path="/inquiries/new" element={<InquiriesNew />} />
             <Route path="/inquiries/:id" element={<InquiryDetails />} />
