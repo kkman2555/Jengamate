@@ -1,8 +1,8 @@
-
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 type BasicOrder = {
   id: string;
@@ -40,10 +40,9 @@ const ORDERS_PER_PAGE = 10;
 export function usePaginatedOrders(): UsePaginatedOrdersReturn {
   const { user } = useAuth();
   const { isAdmin, loading: roleLoading } = useUserRole();
-  const [orders, setOrders] = useState<BasicOrder[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [paymentStatusFilter, setPaymentStatusFilter] = useState('');
@@ -68,11 +67,13 @@ export function usePaginatedOrders(): UsePaginatedOrdersReturn {
     }
   }, [debouncedSearchTerm, statusFilter, paymentStatusFilter]);
 
-  const fetchOrders = useCallback(async () => {
-    if (!user || roleLoading) return;
+  const queryKey = ['orders', { currentPage, debouncedSearchTerm, statusFilter, paymentStatusFilter, userId: user?.id, isAdmin }];
 
-    setLoading(true);
-    try {
+  const { data, isLoading: loading, refetch } = useQuery({
+    queryKey,
+    queryFn: async () => {
+      if (!user) return { orders: [], totalCount: 0 };
+
       // Base query
       let query = supabase.from('orders');
       
@@ -110,8 +111,7 @@ export function usePaginatedOrders(): UsePaginatedOrdersReturn {
       const countQuery = buildQuery(true);
       const { count, error: countError } = await countQuery;
       if (countError) throw countError;
-      setTotalCount(count || 0);
-
+      
       const from = (currentPage - 1) * ORDERS_PER_PAGE;
       const to = from + ORDERS_PER_PAGE - 1;
 
@@ -122,19 +122,11 @@ export function usePaginatedOrders(): UsePaginatedOrdersReturn {
       const { data, error } = await dataQuery;
 
       if (error) throw error;
-
-      setOrders(data || []);
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-      setOrders([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [user, isAdmin, roleLoading, currentPage, debouncedSearchTerm, statusFilter, paymentStatusFilter]);
-
-  useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
+      
+      return { orders: (data || []) as BasicOrder[], totalCount: count || 0 };
+    },
+    enabled: !!user && !roleLoading,
+  });
 
   // Set up real-time subscription
   useEffect(() => {
@@ -152,7 +144,7 @@ export function usePaginatedOrders(): UsePaginatedOrdersReturn {
           filter: isAdmin ? undefined : `user_id=eq.${user.id}`
         },
         () => {
-          fetchOrders();
+          queryClient.invalidateQueries({ queryKey: ['orders'] });
         }
       )
       .subscribe();
@@ -160,8 +152,10 @@ export function usePaginatedOrders(): UsePaginatedOrdersReturn {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, isAdmin, fetchOrders]);
+  }, [user, isAdmin, queryClient]);
 
+  const orders = data?.orders ?? [];
+  const totalCount = data?.totalCount ?? 0;
   const totalPages = Math.ceil(totalCount / ORDERS_PER_PAGE);
 
   return {
@@ -171,7 +165,7 @@ export function usePaginatedOrders(): UsePaginatedOrdersReturn {
     totalPages,
     totalCount,
     setCurrentPage,
-    refetch: fetchOrders,
+    refetch,
     searchTerm,
     setSearchTerm,
     statusFilter,
