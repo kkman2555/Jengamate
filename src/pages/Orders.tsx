@@ -1,12 +1,12 @@
-
 import React, { useEffect, useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useNavigate } from 'react-router-dom';
 import { format } from "date-fns";
 import { OrderPaymentModal } from "@/components/orders/OrderPaymentModal";
 import { OrderStatusBadge } from '@/components/orders/OrderStatusBadge';
@@ -29,6 +29,7 @@ type BasicOrder = {
 const Orders = () => {
   const { user } = useAuth();
   const { isAdmin, loading: roleLoading } = useUserRole();
+  const navigate = useNavigate();
   const [orders, setOrders] = useState<BasicOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [openModal, setOpenModal] = useState<{ open: boolean, orderId?: string }>({ open: false });
@@ -140,7 +141,7 @@ const Orders = () => {
                       <th className="px-3 py-2 border">Total Amount</th>
                       <th className="px-3 py-2 border">Commission</th>
                       <th className="px-3 py-2 border">Payment Status</th>
-                      <th className="px-3 py-2 border">Action</th>
+                      <th className="px-3 py-2 border">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -174,15 +175,25 @@ const Orders = () => {
                             </div>
                           </td>
                           <td className="px-3 py-2 border">
-                            {(!order.receipt_urls || order.receipt_urls.length === 0) && (
+                            <div className="flex items-center gap-2">
                               <Button
                                 size="sm"
-                                variant="outline"
-                                onClick={() => setOpenModal({ open: true, orderId: order.id })}
+                                variant="ghost"
+                                onClick={() => navigate(`/orders/${order.id}`)}
                               >
-                                Mark as Paid
+                                <Eye className="mr-1 h-3 w-3" />
+                                View
                               </Button>
-                            )}
+                              {(!order.receipt_urls || order.receipt_urls.length === 0) && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => setOpenModal({ open: true, orderId: order.id })}
+                                >
+                                  Mark as Paid
+                                </Button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       );
