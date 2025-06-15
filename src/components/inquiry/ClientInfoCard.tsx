@@ -4,8 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface ClientInfoCardProps {
   profile: {
-    full_name: string;
-    email: string;
+    full_name: string | null;
+    email: string | null;
   } | null;
 }
 
@@ -25,8 +25,8 @@ export function ClientInfoCard({ profile }: ClientInfoCardProps) {
       <CardContent>
         {profile ? (
           <>
-            {renderDetail("Name", profile.full_name)}
-            {renderDetail("Email", profile.email)}
+            {renderDetail("Name", profile.full_name || "N/A")}
+            {renderDetail("Email", profile.email || "N/A")}
           </>
         ) : (
           <p className="text-muted-foreground">Client details not available.</p>

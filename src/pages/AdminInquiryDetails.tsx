@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -7,7 +6,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useToast } from '@/hooks/use-toast';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { Breadcrumbs } from '@/components/layout/Breadcrumbs';
 import { Card, CardContent } from '@/components/ui/card';
 import { InquiryHeader } from '@/components/inquiry/InquiryHeader';
 import { ClientInfoCard } from '@/components/inquiry/ClientInfoCard';
@@ -102,13 +100,6 @@ const AdminInquiryDetails = () => {
   return (
     <AppLayout>
       <div className="space-y-6">
-        <Breadcrumbs
-          items={[
-            { label: "Home", href: "/" },
-            { label: "Admin", href: "/admin/inquiries" },
-            { label: `Inquiry #${inquiry.inquiry_number}` },
-          ]}
-        />
         <Card>
           <InquiryHeader
             projectName={inquiry.project_name || "N/A"}
