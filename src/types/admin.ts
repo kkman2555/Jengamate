@@ -17,8 +17,8 @@ export interface Inquiry {
   user_id: string;
   created_at: string;
   profiles: {
-    full_name: string;
-    email: string;
+    full_name: string | null;
+    email: string | null;
   } | null;
 }
 
@@ -34,7 +34,7 @@ export interface Order {
   user_id: string;
   created_at: string;
   profiles: {
-    full_name: string;
-    email: string;
+    full_name: string | null;
+    email: string | null;
   } | null;
 }

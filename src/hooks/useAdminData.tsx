@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Inquiry, Order } from '@/types/admin';
@@ -67,8 +66,8 @@ export function useAdminData() {
           user_id: inquiry.user_id,
           created_at: inquiry.created_at || '',
           profiles: userProfile ? {
-            full_name: userProfile.full_name || '',
-            email: userProfile.email || ''
+            full_name: userProfile.full_name,
+            email: userProfile.email
           } : null,
         };
       });
@@ -88,8 +87,8 @@ export function useAdminData() {
           user_id: order.user_id,
           created_at: order.created_at || '',
           profiles: userProfile ? {
-            full_name: userProfile.full_name || '',
-            email: userProfile.email || ''
+            full_name: userProfile.full_name,
+            email: userProfile.email
           } : null,
         };
       });
