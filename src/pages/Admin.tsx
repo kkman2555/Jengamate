@@ -68,9 +68,12 @@ const Admin = ({ initialTab }: AdminProps) => {
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
-          <p className="text-muted-foreground">
+        <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white p-6 rounded-lg shadow-lg">
+          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
+            <Shield className="h-8 w-8" />
+            Admin Dashboard
+          </h1>
+          <p className="text-purple-100 mt-2">
             Manage users, inquiries, and orders across the platform
           </p>
         </div>
@@ -78,15 +81,18 @@ const Admin = ({ initialTab }: AdminProps) => {
         <AdminTabs
           activeTab={activeTab}
           onTabChange={(tabId: 'users' | 'inquiries' | 'orders') => setActiveTab(tabId)}
+          userCount={users.length}
+          inquiryCount={inquiries.length}
+          orderCount={orders.length}
         />
 
         {loading ? (
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
-            <p className="mt-2 text-gray-600">Loading data...</p>
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600 text-lg">Loading data...</p>
           </div>
         ) : (
-          <>
+          <div className="min-h-[400px]">
             {activeTab === 'users' && (
               <UsersTab users={users} onRefresh={refetch} />
             )}
@@ -96,7 +102,7 @@ const Admin = ({ initialTab }: AdminProps) => {
             {activeTab === 'orders' && (
               <OrdersTab orders={orders} onRefresh={refetch} />
             )}
-          </>
+          </div>
         )}
       </div>
     </AppLayout>
