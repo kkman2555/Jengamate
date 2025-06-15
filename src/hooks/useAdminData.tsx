@@ -14,8 +14,23 @@ export function useAdminData() {
     queryFn: async () => {
       const profilesQuery = supabase.from('profiles').select('*');
       const rolesQuery = supabase.from('user_roles').select('user_id, role');
-      const inquiriesQuery = supabase.from('inquiries').select('*, profiles(full_name, email)').order('created_at', { ascending: false });
-      const ordersQuery = supabase.from('orders').select('*, profiles(full_name, email)').order('created_at', { ascending: false });
+      
+      // Fix the queries to properly join with profiles using user_id
+      const inquiriesQuery = supabase
+        .from('inquiries')
+        .select(`
+          *,
+          profiles!inquiries_user_id_fkey(full_name, email)
+        `)
+        .order('created_at', { ascending: false });
+        
+      const ordersQuery = supabase
+        .from('orders')
+        .select(`
+          *,
+          profiles!orders_user_id_fkey(full_name, email)
+        `)
+        .order('created_at', { ascending: false });
 
       const [
         { data: profilesData, error: profilesError },
