@@ -60,7 +60,13 @@ const OrderDetails = () => {
 
       if (error) throw error;
       
-      setOrder(data);
+      // Handle the case where profiles might be null or an array
+      const profileData = Array.isArray(data.profiles) ? data.profiles[0] : data.profiles;
+      
+      setOrder({
+        ...data,
+        profiles: profileData
+      });
     } catch (error) {
       console.error('Error fetching order details:', error);
     } finally {
