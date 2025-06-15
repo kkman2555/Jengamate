@@ -24,6 +24,51 @@ interface DashboardData {
   }>;
 }
 
+const processRevenueTrends = (data: any[]) => {
+  const monthlyData = new Map();
+  
+  data.forEach(order => {
+    const date = new Date(order.created_at);
+    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    const monthName = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    
+    if (!monthlyData.has(monthKey)) {
+      monthlyData.set(monthKey, {
+        month: monthName,
+        revenue: 0,
+        commission: 0,
+      });
+    }
+    
+    const existing = monthlyData.get(monthKey);
+    existing.revenue += order.total_amount || 0;
+    existing.commission += order.commission || 0;
+  });
+  
+  return Array.from(monthlyData.values()).slice(-6);
+};
+
+const processOrderStatus = (data: any[]) => {
+  const statusCounts = new Map();
+  const statusColors = {
+    'Pending': 'hsl(var(--chart-1))',
+    'Confirmed': 'hsl(var(--chart-2))',
+    'Processing': 'hsl(var(--chart-3))',
+    'Completed': 'hsl(var(--chart-4))',
+  };
+  
+  data.forEach(order => {
+    const status = order.status || 'Pending';
+    statusCounts.set(status, (statusCounts.get(status) || 0) + 1);
+  });
+  
+  return Array.from(statusCounts.entries()).map(([status, count]) => ({
+    status,
+    count,
+    fill: statusColors[status as keyof typeof statusColors] || 'hsl(var(--chart-1))',
+  }));
+};
+
 export function useDashboardData() {
   const [rawData, setRawData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -111,51 +156,6 @@ export function useDashboardData() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const processRevenueTrends = (data: any[]) => {
-    const monthlyData = new Map();
-    
-    data.forEach(order => {
-      const date = new Date(order.created_at);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      const monthName = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-      
-      if (!monthlyData.has(monthKey)) {
-        monthlyData.set(monthKey, {
-          month: monthName,
-          revenue: 0,
-          commission: 0,
-        });
-      }
-      
-      const existing = monthlyData.get(monthKey);
-      existing.revenue += order.total_amount || 0;
-      existing.commission += order.commission || 0;
-    });
-    
-    return Array.from(monthlyData.values()).slice(-6);
-  };
-
-  const processOrderStatus = (data: any[]) => {
-    const statusCounts = new Map();
-    const statusColors = {
-      'Pending': 'hsl(var(--chart-1))',
-      'Confirmed': 'hsl(var(--chart-2))',
-      'Processing': 'hsl(var(--chart-3))',
-      'Completed': 'hsl(var(--chart-4))',
-    };
-    
-    data.forEach(order => {
-      const status = order.status || 'Pending';
-      statusCounts.set(status, (statusCounts.get(status) || 0) + 1);
-    });
-    
-    return Array.from(statusCounts.entries()).map(([status, count]) => ({
-      status,
-      count,
-      fill: statusColors[status as keyof typeof statusColors] || 'hsl(var(--chart-1))',
-    }));
   };
 
   useEffect(() => {
