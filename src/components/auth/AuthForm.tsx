@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import FormField from './FormField';
 import SignUpFields from './SignUpFields';
 import PasswordResetDialog from './PasswordResetDialog';
+import GoogleIcon from '@/components/icons/GoogleIcon';
 
 interface AuthFormProps {
   isLogin: boolean;
@@ -21,7 +23,7 @@ const AuthForm = ({ isLogin }: AuthFormProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [isResetDialogOpen, setResetDialogOpen] = useState(false);
   
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, signInWithGoogle } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -69,6 +71,20 @@ const AuthForm = ({ isLogin }: AuthFormProps) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    const { error } = await signInWithGoogle();
+    if (error) {
+      toast({
+        title: "Google Sign-In Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+      setLoading(false);
+    }
+    // If successful, Supabase handles the redirect.
   };
 
   return (
@@ -128,6 +144,23 @@ const AuthForm = ({ isLogin }: AuthFormProps) => {
           )}
         </Button>
       </form>
+
+      <div className="my-6 flex items-center gap-4">
+        <div className="h-px flex-1 bg-slate-200" />
+        <span className="text-sm text-slate-500">OR</span>
+        <div className="h-px flex-1 bg-slate-200" />
+      </div>
+
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full"
+        onClick={handleGoogleSignIn}
+        disabled={loading}
+      >
+        <GoogleIcon className="mr-2 h-4 w-4" />
+        Sign in with Google
+      </Button>
 
       {isLogin && (
         <div className="mt-4 text-right text-sm">
