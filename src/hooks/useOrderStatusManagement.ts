@@ -48,11 +48,19 @@ export const useOrderStatusManagement = (onRefresh: () => void) => {
 
   const verifyPayment = useCallback(async (orderId: string, verified: boolean) => {
     try {
+      // Get the order's total amount first
+      const { data: orderData, error: fetchError } = await supabase
+        .from('orders')
+        .select('total_amount')
+        .eq('id', orderId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
       const { error } = await supabase
         .from('orders')
         .update({ 
-          paid_amount: verified ? supabase.rpc('get_order_total', { order_id: orderId }) : 0,
-          payment_verified: verified 
+          paid_amount: verified ? orderData.total_amount : 0
         })
         .eq('id', orderId);
 

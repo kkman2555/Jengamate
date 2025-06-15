@@ -15,9 +15,11 @@ export function NotificationSystem() {
   useEffect(() => {
     if (!user) return;
 
+    const channelName = `order-notifications-${user.id}-${Date.now()}`;
+    
     // Listen for real-time order updates
     const orderChannel = supabase
-      .channel('order-changes')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -36,10 +38,10 @@ export function NotificationSystem() {
             });
           }
           
-          if (newOrder.payment_verified && !oldOrder.payment_verified) {
+          if (newOrder.paid_amount > oldOrder.paid_amount) {
             toast({
-              title: "Payment Verified",
-              description: `Payment for order ${newOrder.order_number} has been verified`,
+              title: "Payment Updated",
+              description: `Payment for order ${newOrder.order_number} has been updated`,
             });
           }
         }

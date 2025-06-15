@@ -37,7 +37,7 @@ export function OrderActions({ order, onRefresh }: OrderActionsProps) {
             onStatusChange={(status) => updateOrderStatus(order.id, status)}
           />
           
-          {order.receipt_urls && order.receipt_urls.length > 0 && !order.payment_verified && (
+          {order.receipt_urls && order.receipt_urls.length > 0 && order.paid_amount < order.total_amount && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm">

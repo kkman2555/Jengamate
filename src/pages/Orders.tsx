@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +10,6 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { format } from "date-fns";
 import { OrderPaymentModal } from "@/components/orders/OrderPaymentModal";
 import { OrderStatusBadge } from '@/components/orders/OrderStatusBadge';
-import { NotificationSystem } from '@/components/notifications/NotificationSystem';
 
 type BasicOrder = {
   id: string;
@@ -23,7 +23,6 @@ type BasicOrder = {
   receipt_urls?: string[];
   payment_reference?: string;
   payment_date?: string | null;
-  payment_verified?: boolean;
   created_at: string;
 };
 
@@ -43,7 +42,7 @@ const Orders = () => {
       .select(`
         id, order_number, project_name, status, total_amount, paid_amount,
         commission, commission_paid, receipt_urls, payment_reference, 
-        payment_date, payment_verified, created_at, user_id
+        payment_date, created_at, user_id
       `)
       .order('created_at', { ascending: false });
 
@@ -54,6 +53,7 @@ const Orders = () => {
     const { data, error } = await query;
 
     if (error) {
+      console.error('Error fetching orders:', error);
       setLoading(false);
       return;
     }
@@ -64,15 +64,15 @@ const Orders = () => {
   useEffect(() => {
     if (!user || roleLoading) return;
     fetchOrders();
-    // eslint-disable-next-line
   }, [user, isAdmin, roleLoading]);
 
   // Set up real-time subscription for order updates
   useEffect(() => {
     if (!user) return;
 
+    const channelName = `orders-realtime-${user.id}-${Date.now()}`;
     const channel = supabase
-      .channel('orders-realtime')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -93,7 +93,7 @@ const Orders = () => {
   }, [user, isAdmin]);
 
   const getPaymentStatus = (order: BasicOrder) => {
-    if (order.payment_verified) return { status: 'Verified', color: 'text-green-600' };
+    if (order.paid_amount >= order.total_amount) return { status: 'Verified', color: 'text-green-600' };
     if (order.receipt_urls && order.receipt_urls.length > 0) return { status: 'Pending Verification', color: 'text-yellow-600' };
     return { status: 'Not Paid', color: 'text-red-600' };
   };
@@ -113,7 +113,6 @@ const Orders = () => {
               </div>
             )}
           </div>
-          <NotificationSystem />
         </div>
         <Card>
           <CardHeader>
