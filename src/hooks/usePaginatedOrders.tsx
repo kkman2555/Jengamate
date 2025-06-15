@@ -31,6 +31,8 @@ interface UsePaginatedOrdersReturn {
   setSearchTerm: (term: string) => void;
   statusFilter: string;
   setStatusFilter: (status: string) => void;
+  paymentStatusFilter: string;
+  setPaymentStatusFilter: (status: string) => void;
 }
 
 const ORDERS_PER_PAGE = 10;
@@ -44,6 +46,7 @@ export function usePaginatedOrders(): UsePaginatedOrdersReturn {
   const [totalCount, setTotalCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState('');
 
   // Debounce search term to avoid excessive queries
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
@@ -63,7 +66,7 @@ export function usePaginatedOrders(): UsePaginatedOrdersReturn {
     if (currentPage !== 1) {
       setCurrentPage(1);
     }
-  }, [debouncedSearchTerm, statusFilter]);
+  }, [debouncedSearchTerm, statusFilter, paymentStatusFilter]);
 
   const fetchOrders = useCallback(async () => {
     if (!user || roleLoading) return;
@@ -91,6 +94,16 @@ export function usePaginatedOrders(): UsePaginatedOrdersReturn {
         if (debouncedSearchTerm) {
           q = q.or(`order_number.ilike.%${debouncedSearchTerm}%,project_name.ilike.%${debouncedSearchTerm}%`);
         }
+        
+        if (paymentStatusFilter) {
+          if (paymentStatusFilter === 'unpaid') {
+            q = q.eq('paid_amount', 0);
+          } else if (paymentStatusFilter === 'partially_paid') {
+            q = q.gt('paid_amount', 0).filter('paid_amount', 'lt', 'total_amount');
+          } else if (paymentStatusFilter === 'paid') {
+            q = q.gte('paid_amount', 'total_amount');
+          }
+        }
         return q;
       };
       
@@ -117,7 +130,7 @@ export function usePaginatedOrders(): UsePaginatedOrdersReturn {
     } finally {
       setLoading(false);
     }
-  }, [user, isAdmin, roleLoading, currentPage, debouncedSearchTerm, statusFilter]);
+  }, [user, isAdmin, roleLoading, currentPage, debouncedSearchTerm, statusFilter, paymentStatusFilter]);
 
   useEffect(() => {
     fetchOrders();
@@ -163,5 +176,7 @@ export function usePaginatedOrders(): UsePaginatedOrdersReturn {
     setSearchTerm,
     statusFilter,
     setStatusFilter,
+    paymentStatusFilter,
+    setPaymentStatusFilter,
   };
 }

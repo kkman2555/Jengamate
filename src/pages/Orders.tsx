@@ -23,6 +23,8 @@ const Orders = () => {
     setSearchTerm,
     statusFilter,
     setStatusFilter,
+    paymentStatusFilter,
+    setPaymentStatusFilter,
   } = usePaginatedOrders();
   
   const [openModal, setOpenModal] = useState<{ open: boolean, orderId?: string }>({ open: false });
@@ -52,6 +54,8 @@ const Orders = () => {
               onSearchChange={setSearchTerm}
               statusFilter={statusFilter}
               onStatusChange={setStatusFilter}
+              paymentStatusFilter={paymentStatusFilter}
+              onPaymentStatusChange={setPaymentStatusFilter}
             />
             <OrdersTable
               orders={orders}

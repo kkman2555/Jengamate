@@ -9,6 +9,8 @@ interface OrdersFiltersProps {
   onSearchChange: (value: string) => void;
   statusFilter: string;
   onStatusChange: (value: string) => void;
+  paymentStatusFilter: string;
+  onPaymentStatusChange: (value: string) => void;
 }
 
 const statusOptions = [
@@ -21,7 +23,21 @@ const statusOptions = [
   { value: 'cancelled', label: 'Cancelled' }
 ];
 
-export function OrdersFilters({ searchTerm, onSearchChange, statusFilter, onStatusChange }: OrdersFiltersProps) {
+const paymentStatusOptions = [
+  { value: 'all', label: 'All Payment' },
+  { value: 'unpaid', label: 'Unpaid' },
+  { value: 'partially_paid', label: 'Partially Paid' },
+  { value: 'paid', label: 'Paid' }
+];
+
+export function OrdersFilters({ 
+  searchTerm, 
+  onSearchChange, 
+  statusFilter, 
+  onStatusChange, 
+  paymentStatusFilter, 
+  onPaymentStatusChange 
+}: OrdersFiltersProps) {
   return (
     <div className="flex flex-wrap items-center gap-4 mb-4">
       <div className="relative flex-grow md:flex-grow-0 md:w-full md:max-w-sm">
@@ -39,6 +55,18 @@ export function OrdersFilters({ searchTerm, onSearchChange, statusFilter, onStat
         </SelectTrigger>
         <SelectContent>
           {statusOptions.map(option => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select value={paymentStatusFilter || 'all'} onValueChange={(value) => onPaymentStatusChange(value === 'all' ? '' : value)}>
+        <SelectTrigger className="w-full md:w-[180px]">
+          <SelectValue placeholder="Filter by payment" />
+        </SelectTrigger>
+        <SelectContent>
+          {paymentStatusOptions.map(option => (
             <SelectItem key={option.value} value={option.value}>
               {option.label}
             </SelectItem>
