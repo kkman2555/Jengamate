@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Inquiry, Order } from '@/types/admin';
@@ -24,54 +25,23 @@ interface DashboardData {
 }
 
 export function useDashboardData() {
-  const [data, setData] = useState<DashboardData | null>(null);
+  const [rawData, setRawData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+
+  const data = useMemo(() => {
+    if (!rawData) return null;
+
+    return {
+      ...rawData,
+      revenueTrends: processRevenueTrends(rawData.revenueByMonthData || []),
+      orderStatusDistribution: processOrderStatus(rawData.orderStatusData || []),
+    };
+  }, [rawData]);
 
   const fetchData = async () => {
     try {
       setLoading(true);
-
-      const inquiriesCountPromise = supabase
-        .from('inquiries')
-        .select('*', { count: 'exact', head: true });
-
-      const activeOrdersCountPromise = supabase
-        .from('orders')
-        .select('*', { count: 'exact', head: true })
-        .not('status', 'eq', 'Completed');
-
-      const ordersDataPromise = supabase
-        .from('orders')
-        .select('total_amount');
-
-      const usersCountPromise = supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true });
-        
-      const recentInquiriesPromise = supabase
-        .from('inquiries')
-        .select('id, inquiry_number, project_name, status, created_at, user_id, total_amount')
-        .order('created_at', { ascending: false })
-        .limit(3);
-
-      const recentOrdersPromise = supabase
-        .from('orders')
-        .select('id, order_number, project_name, status, created_at, user_id, total_amount, paid_amount, commission, commission_paid')
-        .order('created_at', { ascending: false })
-        .limit(3);
-      
-      const profilesPromise = supabase.from('profiles').select('id, full_name, email');
-
-      const revenueByMonthPromise = supabase
-        .from('orders')
-        .select('total_amount, commission, created_at')
-        .not('total_amount', 'is', null);
-
-      const orderStatusPromise = supabase
-        .from('orders')
-        .select('status')
-        .not('status', 'is', null);
 
       const [
         { count: totalInquiries },
@@ -84,15 +54,15 @@ export function useDashboardData() {
         { data: revenueByMonthData, error: revenueByMonthError },
         { data: orderStatusData, error: orderStatusError }
       ] = await Promise.all([
-        inquiriesCountPromise,
-        activeOrdersCountPromise,
-        ordersDataPromise,
-        usersCountPromise,
-        recentInquiriesPromise,
-        recentOrdersPromise,
-        profilesPromise,
-        revenueByMonthPromise,
-        orderStatusPromise,
+        supabase.from('inquiries').select('*', { count: 'exact', head: true }),
+        supabase.from('orders').select('*', { count: 'exact', head: true }).not('status', 'eq', 'Completed'),
+        supabase.from('orders').select('total_amount'),
+        supabase.from('profiles').select('*', { count: 'exact', head: true }),
+        supabase.from('inquiries').select('id, inquiry_number, project_name, status, created_at, user_id, total_amount').order('created_at', { ascending: false }).limit(3),
+        supabase.from('orders').select('id, order_number, project_name, status, created_at, user_id, total_amount, paid_amount, commission, commission_paid').order('created_at', { ascending: false }).limit(3),
+        supabase.from('profiles').select('id, full_name, email'),
+        supabase.from('orders').select('total_amount, commission, created_at').not('total_amount', 'is', null),
+        supabase.from('orders').select('status').not('status', 'is', null),
       ]);
 
       if (revenueError) throw revenueError;
@@ -121,20 +91,14 @@ export function useDashboardData() {
         .sort((a, b) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime())
         .slice(0, 5);
 
-      // Process revenue trends data
-      const revenueTrends = processRevenueTrends(revenueByMonthData || []);
-      
-      // Process order status distribution
-      const orderStatusDistribution = processOrderStatus(orderStatusData || []);
-
-      setData({
+      setRawData({
         totalInquiries: totalInquiries || 0,
         activeOrders: activeOrders || 0,
         totalRevenue,
         activeUsers: activeUsers || 0,
         recentActivity,
-        revenueTrends,
-        orderStatusDistribution,
+        revenueByMonthData,
+        orderStatusData,
       });
 
     } catch (error) {
@@ -170,7 +134,7 @@ export function useDashboardData() {
       existing.commission += order.commission || 0;
     });
     
-    return Array.from(monthlyData.values()).slice(-6); // Last 6 months
+    return Array.from(monthlyData.values()).slice(-6);
   };
 
   const processOrderStatus = (data: any[]) => {
