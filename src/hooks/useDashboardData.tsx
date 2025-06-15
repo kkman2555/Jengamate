@@ -113,7 +113,7 @@ export function useDashboardData() {
         supabase.from('profiles').select('id, full_name, email'),
         supabase.from('orders').select('total_amount, commission, created_at').not('total_amount', 'is', null),
         supabase.from('orders').select('status').not('status', 'is', null),
-        supabase.from('orders').select('total_amount, paid_amount').filter('paid_amount', 'lt.total_amount'),
+        supabase.from('orders').select('total_amount, paid_amount').filter('paid_amount', 'lt.col', 'total_amount'),
         supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'Completed').gte('created_at', firstDayOfMonth)
       ]);
 
