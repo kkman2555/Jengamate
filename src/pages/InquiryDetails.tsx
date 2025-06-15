@@ -121,6 +121,9 @@ const InquiryDetails = () => {
     );
   }
 
+  // Convert Json products to the expected format
+  const processedProducts = Array.isArray(inquiry.products) ? inquiry.products : null;
+
   return (
     <AppLayout>
       <div className="max-w-4xl mx-auto py-8">
@@ -151,7 +154,7 @@ const InquiryDetails = () => {
               <ClientInfoCard profile={profile} />
             </div>
             
-            <ProductDescriptionCard products={inquiry.products} />
+            <ProductDescriptionCard products={processedProducts} />
           </CardContent>
         </Card>
       </div>
