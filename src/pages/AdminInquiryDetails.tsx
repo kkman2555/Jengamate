@@ -42,27 +42,38 @@ const AdminInquiryDetails = () => {
 
   const fetchInquiryDetails = async () => {
     if (!id) throw new Error("Inquiry ID is missing");
-    
-    const { data, error } = await supabase
+
+    const { data: inquiryData, error: inquiryError } = await supabase
       .from('inquiries')
-      .select(`
-        *,
-        client:profiles (
-          full_name,
-          email
-        )
-      `)
+      .select('*')
       .eq('id', id)
       .single();
 
-    if (error) {
-      if (error.code === 'PGRST116') { // Not found
+    if (inquiryError) {
+      if (inquiryError.code === 'PGRST116') { // Not found
         navigate('/404');
         return null;
       }
-      throw new Error(error.message);
+      throw new Error(inquiryError.message);
     }
-    return data;
+    
+    if (!inquiryData) {
+        return null;
+    }
+
+    const { data: clientData, error: clientError } = await supabase
+        .from('profiles')
+        .select('full_name, email')
+        .eq('id', inquiryData.user_id)
+        .single();
+
+    if (clientError) {
+        console.error("Error fetching client for inquiry:", clientError.message);
+        // Return inquiry data with null client if client fetch fails, to prevent crash
+        return { ...inquiryData, client: null };
+    }
+
+    return { ...inquiryData, client: clientData };
   };
 
   const { data: inquiry, isLoading, error, refetch } = useQuery({
@@ -130,4 +141,3 @@ const AdminInquiryDetails = () => {
 };
 
 export default AdminInquiryDetails;
-
