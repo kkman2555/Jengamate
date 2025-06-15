@@ -10,7 +10,7 @@ import {
   TableCaption,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Inquiry } from "@/types/admin";
 import { format } from "date-fns";
@@ -25,7 +25,7 @@ interface InquiriesTabProps {
 const InquiriesTab = ({ inquiries }: InquiriesTabProps) => {
   const navigate = useNavigate();
 
-  const getStatusVariant = (status: string): "default" | "destructive" | "outline" | "secondary" | null | undefined => {
+  const getStatusVariant = (status: string): "default" | "destructive" | "outline" | "secondary" => {
     switch (status) {
       case 'Pending': return 'default';
       case 'Quoted': return 'outline';
