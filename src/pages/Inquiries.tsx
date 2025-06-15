@@ -5,41 +5,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Plus, FileText, Loader2 } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import { useInquiries } from '@/hooks/useInquiries';
 
 const Inquiries = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { isAdmin, loading: roleLoading } = useUserRole();
-
-  const { data: inquiries, isLoading } = useQuery({
-    queryKey: ['inquiries', user?.id, isAdmin],
-    queryFn: async () => {
-        if (!user) return [];
-        
-        let query = supabase
-            .from('inquiries')
-            .select('*');
-
-        if (!isAdmin) {
-            query = query.eq('user_id', user.id);
-        }
-
-        const { data, error } = await query.order('created_at', { ascending: false });
-
-        if (error) {
-            console.error("Error fetching inquiries:", error);
-            throw new Error(error.message);
-        }
-        return data;
-    },
-    enabled: !!user && !roleLoading,
-  });
+  const { isAdmin } = useUserRole();
+  const { inquiries, isLoading: pageIsLoading } = useInquiries();
 
   const getStatusVariant = (status: string): "default" | "destructive" | "outline" | "secondary" | null | undefined => {
     switch (status) {
@@ -51,8 +25,6 @@ const Inquiries = () => {
     }
   };
   
-  const pageIsLoading = isLoading || roleLoading;
-
   return (
     <AppLayout>
       <div className="space-y-6">
