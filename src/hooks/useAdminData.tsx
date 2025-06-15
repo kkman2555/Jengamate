@@ -15,21 +15,15 @@ export function useAdminData() {
       const profilesQuery = supabase.from('profiles').select('*');
       const rolesQuery = supabase.from('user_roles').select('user_id, role');
       
-      // Fix the queries to properly join with profiles using user_id
+      // Fetch inquiries and orders separately without joins
       const inquiriesQuery = supabase
         .from('inquiries')
-        .select(`
-          *,
-          profiles!inquiries_user_id_fkey(full_name, email)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
         
       const ordersQuery = supabase
         .from('orders')
-        .select(`
-          *,
-          profiles!orders_user_id_fkey(full_name, email)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       const [
@@ -44,6 +38,11 @@ export function useAdminData() {
       if (inquiriesError) throw new Error(`Inquiries Error: ${inquiriesError.message}`);
       if (ordersError) throw new Error(`Orders Error: ${ordersError.message}`);
 
+      // Create a profiles lookup map for efficient joining
+      const profilesMap = new Map(
+        (profilesData || []).map(profile => [profile.id, profile])
+      );
+
       const users: User[] = (profilesData || []).map(profile => {
         const roleInfo = (rolesData || []).find(r => r.user_id === profile.id);
         return {
@@ -56,32 +55,44 @@ export function useAdminData() {
         };
       });
 
-      // Type the inquiries data properly
-      const inquiries: Inquiry[] = (inquiriesData || []).map(inquiry => ({
-        id: inquiry.id,
-        inquiry_number: inquiry.inquiry_number,
-        project_name: inquiry.project_name,
-        status: inquiry.status || 'Pending',
-        total_amount: inquiry.total_amount || 0,
-        user_id: inquiry.user_id,
-        created_at: inquiry.created_at || '',
-        profiles: inquiry.profiles || null,
-      }));
+      // Manually join inquiries with profiles data
+      const inquiries: Inquiry[] = (inquiriesData || []).map(inquiry => {
+        const userProfile = profilesMap.get(inquiry.user_id);
+        return {
+          id: inquiry.id,
+          inquiry_number: inquiry.inquiry_number,
+          project_name: inquiry.project_name,
+          status: inquiry.status || 'Pending',
+          total_amount: inquiry.total_amount || 0,
+          user_id: inquiry.user_id,
+          created_at: inquiry.created_at || '',
+          profiles: userProfile ? {
+            full_name: userProfile.full_name || '',
+            email: userProfile.email || ''
+          } : null,
+        };
+      });
 
-      // Type the orders data properly
-      const orders: Order[] = (ordersData || []).map(order => ({
-        id: order.id,
-        order_number: order.order_number,
-        project_name: order.project_name,
-        status: order.status || 'Pending',
-        total_amount: order.total_amount,
-        paid_amount: order.paid_amount || 0,
-        commission: order.commission || 0,
-        commission_paid: order.commission_paid || false,
-        user_id: order.user_id,
-        created_at: order.created_at || '',
-        profiles: order.profiles || null,
-      }));
+      // Manually join orders with profiles data
+      const orders: Order[] = (ordersData || []).map(order => {
+        const userProfile = profilesMap.get(order.user_id);
+        return {
+          id: order.id,
+          order_number: order.order_number,
+          project_name: order.project_name,
+          status: order.status || 'Pending',
+          total_amount: order.total_amount,
+          paid_amount: order.paid_amount || 0,
+          commission: order.commission || 0,
+          commission_paid: order.commission_paid || false,
+          user_id: order.user_id,
+          created_at: order.created_at || '',
+          profiles: userProfile ? {
+            full_name: userProfile.full_name || '',
+            email: userProfile.email || ''
+          } : null,
+        };
+      });
 
       return {
         users,
