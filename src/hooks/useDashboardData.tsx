@@ -11,6 +11,16 @@ interface DashboardData {
   totalRevenue: number;
   activeUsers: number;
   recentActivity: ActivityItem[];
+  revenueTrends: Array<{
+    month: string;
+    revenue: number;
+    commission: number;
+  }>;
+  orderStatusDistribution: Array<{
+    status: string;
+    count: number;
+    fill: string;
+  }>;
 }
 
 export function useDashboardData() {
@@ -53,6 +63,16 @@ export function useDashboardData() {
       
       const profilesPromise = supabase.from('profiles').select('id, full_name, email');
 
+      const revenueByMonthPromise = supabase
+        .from('orders')
+        .select('total_amount, commission, created_at')
+        .not('total_amount', 'is', null);
+
+      const orderStatusPromise = supabase
+        .from('orders')
+        .select('status')
+        .not('status', 'is', null);
+
       const [
         { count: totalInquiries },
         { count: activeOrders },
@@ -60,7 +80,9 @@ export function useDashboardData() {
         { count: activeUsers },
         { data: recentInquiriesData, error: inquiriesError },
         { data: recentOrdersData, error: ordersError },
-        { data: profilesData, error: profilesError }
+        { data: profilesData, error: profilesError },
+        { data: revenueByMonthData, error: revenueByMonthError },
+        { data: orderStatusData, error: orderStatusError }
       ] = await Promise.all([
         inquiriesCountPromise,
         activeOrdersCountPromise,
@@ -69,12 +91,16 @@ export function useDashboardData() {
         recentInquiriesPromise,
         recentOrdersPromise,
         profilesPromise,
+        revenueByMonthPromise,
+        orderStatusPromise,
       ]);
 
       if (revenueError) throw revenueError;
       if (inquiriesError) throw inquiriesError;
       if (ordersError) throw ordersError;
       if (profilesError) throw profilesError;
+      if (revenueByMonthError) throw revenueByMonthError;
+      if (orderStatusError) throw orderStatusError;
       
       const profilesMap = new Map(profilesData?.map(p => [p.id, p]));
       const totalRevenue = ordersData?.reduce((sum, order) => sum + (order.total_amount || 0), 0) || 0;
@@ -95,12 +121,20 @@ export function useDashboardData() {
         .sort((a, b) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime())
         .slice(0, 5);
 
+      // Process revenue trends data
+      const revenueTrends = processRevenueTrends(revenueByMonthData || []);
+      
+      // Process order status distribution
+      const orderStatusDistribution = processOrderStatus(orderStatusData || []);
+
       setData({
         totalInquiries: totalInquiries || 0,
         activeOrders: activeOrders || 0,
         totalRevenue,
         activeUsers: activeUsers || 0,
         recentActivity,
+        revenueTrends,
+        orderStatusDistribution,
       });
 
     } catch (error) {
@@ -113,6 +147,51 @@ export function useDashboardData() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const processRevenueTrends = (data: any[]) => {
+    const monthlyData = new Map();
+    
+    data.forEach(order => {
+      const date = new Date(order.created_at);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const monthName = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      
+      if (!monthlyData.has(monthKey)) {
+        monthlyData.set(monthKey, {
+          month: monthName,
+          revenue: 0,
+          commission: 0,
+        });
+      }
+      
+      const existing = monthlyData.get(monthKey);
+      existing.revenue += order.total_amount || 0;
+      existing.commission += order.commission || 0;
+    });
+    
+    return Array.from(monthlyData.values()).slice(-6); // Last 6 months
+  };
+
+  const processOrderStatus = (data: any[]) => {
+    const statusCounts = new Map();
+    const statusColors = {
+      'Pending': 'hsl(var(--chart-1))',
+      'Confirmed': 'hsl(var(--chart-2))',
+      'Processing': 'hsl(var(--chart-3))',
+      'Completed': 'hsl(var(--chart-4))',
+    };
+    
+    data.forEach(order => {
+      const status = order.status || 'Pending';
+      statusCounts.set(status, (statusCounts.get(status) || 0) + 1);
+    });
+    
+    return Array.from(statusCounts.entries()).map(([status, count]) => ({
+      status,
+      count,
+      fill: statusColors[status as keyof typeof statusColors] || 'hsl(var(--chart-1))',
+    }));
   };
 
   useEffect(() => {

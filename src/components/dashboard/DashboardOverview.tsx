@@ -7,30 +7,9 @@ import { useNavigate } from 'react-router-dom';
 import { useDashboardData, ActivityItem } from '@/hooks/useDashboardData';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
-
-interface MetricCardProps {
-  title: string;
-  value: string | number;
-  description: string;
-  icon: React.ReactNode;
-}
-
-function MetricCard({ title, value, description, icon }: MetricCardProps) {
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        {icon}
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        <p className="text-xs text-muted-foreground">
-          {description}
-        </p>
-      </CardContent>
-    </Card>
-  );
-}
+import { MetricCard } from './MetricCard';
+import { RevenueTrendsChart } from './RevenueTrendsChart';
+import { OrderStatusChart } from './OrderStatusChart';
 
 const DashboardLoadingSkeleton = () => (
   <div className="space-y-6">
@@ -98,7 +77,6 @@ const RecentActivityItem = ({ activity }: { activity: ActivityItem }) => {
   )
 };
 
-
 export function DashboardOverview() {
   const navigate = useNavigate();
   const { data, loading } = useDashboardData();
@@ -147,6 +125,11 @@ export function DashboardOverview() {
           description="engineers registered"
           icon={<Users className="h-4 w-4 text-muted-foreground" />}
         />
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <RevenueTrendsChart data={data.revenueTrends} />
+        <OrderStatusChart data={data.orderStatusDistribution} />
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
