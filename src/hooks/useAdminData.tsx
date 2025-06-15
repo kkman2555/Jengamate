@@ -41,10 +41,37 @@ export function useAdminData() {
         };
       });
 
+      // Type the inquiries data properly
+      const inquiries: Inquiry[] = (inquiriesData || []).map(inquiry => ({
+        id: inquiry.id,
+        inquiry_number: inquiry.inquiry_number,
+        project_name: inquiry.project_name,
+        status: inquiry.status || 'Pending',
+        total_amount: inquiry.total_amount || 0,
+        user_id: inquiry.user_id,
+        created_at: inquiry.created_at || '',
+        profiles: inquiry.profiles || null,
+      }));
+
+      // Type the orders data properly
+      const orders: Order[] = (ordersData || []).map(order => ({
+        id: order.id,
+        order_number: order.order_number,
+        project_name: order.project_name,
+        status: order.status || 'Pending',
+        total_amount: order.total_amount,
+        paid_amount: order.paid_amount || 0,
+        commission: order.commission || 0,
+        commission_paid: order.commission_paid || false,
+        user_id: order.user_id,
+        created_at: order.created_at || '',
+        profiles: order.profiles || null,
+      }));
+
       return {
         users,
-        inquiries: (inquiriesData as Inquiry[]) || [],
-        orders: (ordersData as Order[]) || [],
+        inquiries,
+        orders,
       };
     },
   });
