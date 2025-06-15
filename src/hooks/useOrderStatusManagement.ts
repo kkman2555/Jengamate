@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -82,8 +81,34 @@ export const useOrderStatusManagement = (onRefresh: () => void) => {
     }
   }, [onRefresh, toast]);
 
+  const markCommissionPaid = useCallback(async (orderId: string) => {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ commission_paid: true })
+        .eq('id', orderId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Commission Paid",
+        description: "The commission has been successfully marked as paid.",
+      });
+      
+      onRefresh();
+    } catch (error) {
+      console.error('Error marking commission as paid:', error);
+      toast({
+        title: "Error",
+        description: "Failed to mark commission as paid. Please try again.",
+        variant: "destructive"
+      });
+    }
+  }, [onRefresh, toast]);
+
   return {
     updateOrderStatus,
     verifyPayment,
+    markCommissionPaid,
   };
 };

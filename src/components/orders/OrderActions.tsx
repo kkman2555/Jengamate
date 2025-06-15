@@ -17,7 +17,7 @@ interface OrderActionsProps {
 export function OrderActions({ order, onRefresh }: OrderActionsProps) {
   const navigate = useNavigate();
   const { isAdmin } = useUserRole();
-  const { updateOrderStatus, verifyPayment } = useOrderStatusManagement(onRefresh);
+  const { updateOrderStatus, verifyPayment, markCommissionPaid } = useOrderStatusManagement(onRefresh);
 
   return (
     <div className="flex items-center gap-2">
@@ -61,7 +61,7 @@ export function OrderActions({ order, onRefresh }: OrderActionsProps) {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => {/* handled in parent */}}
+              onClick={() => markCommissionPaid(order.id)}
               className="text-xs"
             >
               <DollarSign className="mr-1 h-3 w-3" />
