@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -46,7 +47,7 @@ const AdminInquiryDetails = () => {
       .from('inquiries')
       .select(`
         *,
-        profiles (
+        client:profiles (
           full_name,
           email
         )
@@ -112,7 +113,7 @@ const AdminInquiryDetails = () => {
               <AdminInquiryActions inquiry={inquiry} onUpdate={refetch} />
             </div>
             <div className="space-y-6">
-              <ClientInfoCard profile={inquiry.profiles} />
+              <ClientInfoCard profile={inquiry.client} />
               <InquiryDetailsCard
                 createdAt={inquiry.created_at}
                 expectedDate={inquiry.expected_date}
@@ -129,3 +130,4 @@ const AdminInquiryDetails = () => {
 };
 
 export default AdminInquiryDetails;
+
