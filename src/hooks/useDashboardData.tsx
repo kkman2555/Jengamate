@@ -92,41 +92,132 @@ export function useDashboardData() {
 
       const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
 
-      const [
-        { count: totalInquiries },
-        { count: activeOrders },
-        { data: ordersData, error: revenueError },
-        { count: activeUsers },
-        { data: recentInquiriesData, error: inquiriesError },
-        { data: recentOrdersData, error: ordersError },
-        { data: profilesData, error: profilesError },
-        { data: revenueByMonthData, error: revenueByMonthError },
-        { data: orderStatusData, error: orderStatusError },
-        { data: pendingPaymentsData, error: pendingPaymentsError },
-        { count: completedThisMonth, error: completedThisMonthError }
-      ] = await Promise.all([
-        supabase.from('inquiries').select('*', { count: 'exact', head: true }),
-        supabase.from('orders').select('*', { count: 'exact', head: true }).not('status', 'eq', 'Completed'),
-        supabase.from('orders').select('total_amount'),
-        supabase.from('profiles').select('*', { count: 'exact', head: true }),
-        supabase.from('inquiries').select('id, inquiry_number, project_name, status, created_at, user_id, total_amount').order('created_at', { ascending: false }).limit(3),
-        supabase.from('orders').select('id, order_number, project_name, status, created_at, user_id, total_amount, paid_amount, commission, commission_paid').order('created_at', { ascending: false }).limit(3),
-        supabase.from('profiles').select('id, full_name, email'),
-        supabase.from('orders').select('total_amount, commission, created_at').not('total_amount', 'is', null),
-        supabase.from('orders').select('status').not('status', 'is', null),
-        supabase.from('orders').select('total_amount, paid_amount').gt('total_amount', 0).not('paid_amount', 'is', null),
-        supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'Completed').gte('created_at', firstDayOfMonth)
-      ]);
+      console.log('Starting dashboard data fetch...');
 
-      if (revenueError) throw revenueError;
-      if (inquiriesError) throw inquiriesError;
-      if (ordersError) throw ordersError;
-      if (profilesError) throw profilesError;
-      if (revenueByMonthError) throw revenueByMonthError;
-      if (orderStatusError) throw orderStatusError;
-      if (pendingPaymentsError) throw pendingPaymentsError;
-      if (completedThisMonthError) throw completedThisMonthError;
+      // Execute queries one by one to identify which one is failing
+      console.log('Fetching total inquiries...');
+      const { count: totalInquiries, error: inquiriesCountError } = await supabase
+        .from('inquiries')
+        .select('*', { count: 'exact', head: true });
       
+      if (inquiriesCountError) {
+        console.error('Error fetching inquiries count:', inquiriesCountError);
+        throw inquiriesCountError;
+      }
+
+      console.log('Fetching active orders...');
+      const { count: activeOrders, error: activeOrdersError } = await supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+        .not('status', 'eq', 'Completed');
+      
+      if (activeOrdersError) {
+        console.error('Error fetching active orders:', activeOrdersError);
+        throw activeOrdersError;
+      }
+
+      console.log('Fetching orders for revenue...');
+      const { data: ordersData, error: revenueError } = await supabase
+        .from('orders')
+        .select('total_amount');
+      
+      if (revenueError) {
+        console.error('Error fetching revenue data:', revenueError);
+        throw revenueError;
+      }
+
+      console.log('Fetching active users...');
+      const { count: activeUsers, error: usersError } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+      
+      if (usersError) {
+        console.error('Error fetching users:', usersError);
+        throw usersError;
+      }
+
+      console.log('Fetching recent inquiries...');
+      const { data: recentInquiriesData, error: inquiriesError } = await supabase
+        .from('inquiries')
+        .select('id, inquiry_number, project_name, status, created_at, user_id, total_amount')
+        .order('created_at', { ascending: false })
+        .limit(3);
+      
+      if (inquiriesError) {
+        console.error('Error fetching recent inquiries:', inquiriesError);
+        throw inquiriesError;
+      }
+
+      console.log('Fetching recent orders...');
+      const { data: recentOrdersData, error: ordersError } = await supabase
+        .from('orders')
+        .select('id, order_number, project_name, status, created_at, user_id, total_amount, paid_amount, commission, commission_paid')
+        .order('created_at', { ascending: false })
+        .limit(3);
+      
+      if (ordersError) {
+        console.error('Error fetching recent orders:', ordersError);
+        throw ordersError;
+      }
+
+      console.log('Fetching profiles...');
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name, email');
+      
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+        throw profilesError;
+      }
+
+      console.log('Fetching revenue by month...');
+      const { data: revenueByMonthData, error: revenueByMonthError } = await supabase
+        .from('orders')
+        .select('total_amount, commission, created_at')
+        .not('total_amount', 'is', null);
+      
+      if (revenueByMonthError) {
+        console.error('Error fetching revenue by month:', revenueByMonthError);
+        throw revenueByMonthError;
+      }
+
+      console.log('Fetching order status data...');
+      const { data: orderStatusData, error: orderStatusError } = await supabase
+        .from('orders')
+        .select('status')
+        .not('status', 'is', null);
+      
+      if (orderStatusError) {
+        console.error('Error fetching order status:', orderStatusError);
+        throw orderStatusError;
+      }
+
+      console.log('Fetching pending payments data...');
+      const { data: pendingPaymentsData, error: pendingPaymentsError } = await supabase
+        .from('orders')
+        .select('total_amount, paid_amount')
+        .gt('total_amount', 0)
+        .not('paid_amount', 'is', null);
+      
+      if (pendingPaymentsError) {
+        console.error('Error fetching pending payments:', pendingPaymentsError);
+        throw pendingPaymentsError;
+      }
+
+      console.log('Fetching completed this month...');
+      const { count: completedThisMonth, error: completedThisMonthError } = await supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'Completed')
+        .gte('created_at', firstDayOfMonth);
+      
+      if (completedThisMonthError) {
+        console.error('Error fetching completed this month:', completedThisMonthError);
+        throw completedThisMonthError;
+      }
+
+      console.log('All queries completed successfully');
+
       const profilesMap = new Map(profilesData?.map(p => [p.id, p]));
       const totalRevenue = ordersData?.reduce((sum, order) => sum + (order.total_amount || 0), 0) || 0;
       
