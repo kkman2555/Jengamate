@@ -1,14 +1,14 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { DataTable } from '@/components/ui/data-table';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Order } from '@/types/admin';
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
-import { ShoppingCart, ArrowRight, Download, DollarSign } from 'lucide-react';
+import { ShoppingCart, Download, DollarSign } from 'lucide-react';
 import { useOrderManagement } from '@/hooks/useOrderManagement';
+import { OrderStatusBadge } from '@/components/orders/OrderStatusBadge';
+import { OrderActions } from '@/components/orders/OrderActions';
 
 interface OrdersTabProps {
   orders: Order[];
@@ -18,18 +18,6 @@ interface OrdersTabProps {
 const OrdersTab = ({ orders, onRefresh }: OrdersTabProps) => {
   const navigate = useNavigate();
   const { handleExportCSV, handleMarkCommissionPaid } = useOrderManagement(orders, onRefresh);
-
-  const getStatusVariant = (status: string): "default" | "destructive" | "outline" | "secondary" => {
-    switch (status.toLowerCase()) {
-      case 'pending': return 'default';
-      case 'confirmed': return 'outline';
-      case 'processing': return 'secondary';
-      case 'delivered': return 'secondary';
-      case 'completed': return 'secondary';
-      case 'cancelled': return 'destructive';
-      default: return 'default';
-    }
-  };
 
   const columns = [
     {
@@ -52,9 +40,7 @@ const OrdersTab = ({ orders, onRefresh }: OrdersTabProps) => {
     {
       accessorKey: 'status',
       header: 'Status',
-      cell: (order: Order) => (
-        <Badge variant={getStatusVariant(order.status)}>{order.status}</Badge>
-      ),
+      cell: (order: Order) => <OrderStatusBadge status={order.status} />,
     },
     {
       accessorKey: 'total_amount',
@@ -79,9 +65,9 @@ const OrdersTab = ({ orders, onRefresh }: OrdersTabProps) => {
         <div className="flex items-center gap-2">
           <span className="font-medium">TSh{(order.commission || 0).toLocaleString()}</span>
           {order.commission_paid ? (
-            <Badge variant="secondary" className="text-xs">Paid</Badge>
+            <OrderStatusBadge status="Paid" />
           ) : (
-            <Badge variant="outline" className="text-xs">Pending</Badge>
+            <OrderStatusBadge status="Pending" />
           )}
         </div>
       ),
@@ -95,27 +81,10 @@ const OrdersTab = ({ orders, onRefresh }: OrdersTabProps) => {
       accessorKey: 'actions',
       header: 'Actions',
       cell: (order: Order) => (
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => navigate(`/orders/${order.id}`)}
-          >
-            View
-            <ArrowRight className="ml-1 h-3 w-3" />
-          </Button>
-          {!order.commission_paid && order.commission && order.commission > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleMarkCommissionPaid(order.id)}
-              className="text-xs"
-            >
-              <DollarSign className="mr-1 h-3 w-3" />
-              Mark Paid
-            </Button>
-          )}
-        </div>
+        <OrderActions 
+          order={order} 
+          onRefresh={onRefresh}
+        />
       ),
       enableSorting: false,
     },

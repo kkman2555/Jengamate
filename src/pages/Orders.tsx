@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +8,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
 import { format } from "date-fns";
 import { OrderPaymentModal } from "@/components/orders/OrderPaymentModal";
+import { OrderStatusBadge } from '@/components/orders/OrderStatusBadge';
+import { NotificationSystem } from '@/components/notifications/NotificationSystem';
 
 type BasicOrder = {
   id: string;
@@ -22,6 +23,7 @@ type BasicOrder = {
   receipt_urls?: string[];
   payment_reference?: string;
   payment_date?: string | null;
+  payment_verified?: boolean;
   created_at: string;
 };
 
@@ -40,7 +42,8 @@ const Orders = () => {
       .from('orders')
       .select(`
         id, order_number, project_name, status, total_amount, paid_amount,
-        commission, commission_paid, receipt_urls, payment_reference, payment_date, created_at, user_id
+        commission, commission_paid, receipt_urls, payment_reference, 
+        payment_date, payment_verified, created_at, user_id
       `)
       .order('created_at', { ascending: false });
 
@@ -64,19 +67,53 @@ const Orders = () => {
     // eslint-disable-next-line
   }, [user, isAdmin, roleLoading]);
 
+  // Set up real-time subscription for order updates
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('orders-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders',
+          filter: isAdmin ? undefined : `user_id=eq.${user.id}`
+        },
+        () => {
+          fetchOrders(); // Refresh orders when any change occurs
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, isAdmin]);
+
+  const getPaymentStatus = (order: BasicOrder) => {
+    if (order.payment_verified) return { status: 'Verified', color: 'text-green-600' };
+    if (order.receipt_urls && order.receipt_urls.length > 0) return { status: 'Pending Verification', color: 'text-yellow-600' };
+    return { status: 'Not Paid', color: 'text-red-600' };
+  };
+
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Orders</h1>
-          <p className="text-muted-foreground">
-            Track and manage your orders and payments
-          </p>
-          {isAdmin && (
-            <div className="my-2 p-2 rounded bg-yellow-100 text-yellow-900 text-sm inline-flex items-center gap-2">
-              <span>Admin Mode: Viewing all orders</span>
-            </div>
-          )}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Orders</h1>
+            <p className="text-muted-foreground">
+              Track and manage your orders and payments
+            </p>
+            {isAdmin && (
+              <div className="my-2 p-2 rounded bg-yellow-100 text-yellow-900 text-sm inline-flex items-center gap-2">
+                <span>Admin Mode: Viewing all orders</span>
+              </div>
+            )}
+          </div>
+          <NotificationSystem />
         </div>
         <Card>
           <CardHeader>
@@ -103,46 +140,54 @@ const Orders = () => {
                       <th className="px-3 py-2 border">Status</th>
                       <th className="px-3 py-2 border">Total Amount</th>
                       <th className="px-3 py-2 border">Commission</th>
-                      <th className="px-3 py-2 border">Payment</th>
+                      <th className="px-3 py-2 border">Payment Status</th>
                       <th className="px-3 py-2 border">Action</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {orders.map(order => (
-                      <tr key={order.id} className="border-b">
-                        <td className="px-3 py-2 border font-medium">{order.order_number}</td>
-                        <td className="px-3 py-2 border">{order.project_name}</td>
-                        <td className="px-3 py-2 border">{order.status}</td>
-                        <td className="px-3 py-2 border">TSh{order.total_amount?.toLocaleString()}</td>
-                        <td className="px-3 py-2 border">TSh{order.commission?.toLocaleString()}</td>
-                        <td className="px-3 py-2 border">
-                          {order.receipt_urls && order.receipt_urls.length > 0 ? (
+                    {orders.map(order => {
+                      const paymentStatus = getPaymentStatus(order);
+                      return (
+                        <tr key={order.id} className="border-b">
+                          <td className="px-3 py-2 border font-medium">{order.order_number}</td>
+                          <td className="px-3 py-2 border">{order.project_name}</td>
+                          <td className="px-3 py-2 border">
+                            <OrderStatusBadge status={order.status} />
+                          </td>
+                          <td className="px-3 py-2 border">TSh{order.total_amount?.toLocaleString()}</td>
+                          <td className="px-3 py-2 border">TSh{order.commission?.toLocaleString()}</td>
+                          <td className="px-3 py-2 border">
                             <div className="flex flex-col gap-1">
-                              {order.receipt_urls.map((url, index) => (
-                                <a key={index} href={url} target="_blank" rel="noopener noreferrer" className="text-blue-700 underline text-xs">
-                                  View Receipt {index + 1}
-                                </a>
-                              ))}
-                              <span className="text-xs">Ref: {order.payment_reference || "--"}</span>
-                              <span className="text-xs">Date: {order.payment_date ? format(new Date(order.payment_date), "PPP") : "--"}</span>
+                              <span className={`text-xs font-medium ${paymentStatus.color}`}>
+                                {paymentStatus.status}
+                              </span>
+                              {order.receipt_urls && order.receipt_urls.length > 0 && (
+                                <>
+                                  {order.receipt_urls.map((url, index) => (
+                                    <a key={index} href={url} target="_blank" rel="noopener noreferrer" className="text-blue-700 underline text-xs">
+                                      View Receipt {index + 1}
+                                    </a>
+                                  ))}
+                                  <span className="text-xs">Ref: {order.payment_reference || "--"}</span>
+                                  <span className="text-xs">Date: {order.payment_date ? format(new Date(order.payment_date), "PPP") : "--"}</span>
+                                </>
+                              )}
                             </div>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">Not paid</span>
-                          )}
-                        </td>
-                        <td className="px-3 py-2 border">
-                          {(!order.receipt_urls || order.receipt_urls.length === 0) && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setOpenModal({ open: true, orderId: order.id })}
-                            >
-                              Mark as Paid
-                            </Button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
+                          </td>
+                          <td className="px-3 py-2 border">
+                            {(!order.receipt_urls || order.receipt_urls.length === 0) && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setOpenModal({ open: true, orderId: order.id })}
+                              >
+                                Mark as Paid
+                              </Button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
                 <OrderPaymentModal
