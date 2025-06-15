@@ -8,6 +8,7 @@ import { OrdersTable } from '@/components/orders/OrdersTable';
 import { OrdersPagination } from '@/components/orders/OrdersPagination';
 import { BankTransferInfo } from '@/components/orders/BankTransferInfo';
 import { usePaginatedOrders } from '@/hooks/usePaginatedOrders';
+import { OrdersFilters } from '@/components/orders/OrdersFilters';
 
 const Orders = () => {
   const {
@@ -17,7 +18,11 @@ const Orders = () => {
     totalPages,
     totalCount,
     setCurrentPage,
-    refetch
+    refetch,
+    searchTerm,
+    setSearchTerm,
+    statusFilter,
+    setStatusFilter,
   } = usePaginatedOrders();
   
   const [openModal, setOpenModal] = useState<{ open: boolean, orderId?: string }>({ open: false });
@@ -42,6 +47,12 @@ const Orders = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            <OrdersFilters
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              statusFilter={statusFilter}
+              onStatusChange={setStatusFilter}
+            />
             <OrdersTable
               orders={orders}
               loading={loading}

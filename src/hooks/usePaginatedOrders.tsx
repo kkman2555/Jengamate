@@ -27,6 +27,10 @@ interface UsePaginatedOrdersReturn {
   totalCount: number;
   setCurrentPage: (page: number) => void;
   refetch: () => void;
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
+  statusFilter: string;
+  setStatusFilter: (status: string) => void;
 }
 
 const ORDERS_PER_PAGE = 10;
@@ -38,43 +42,71 @@ export function usePaginatedOrders(): UsePaginatedOrdersReturn {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+
+  // Debounce search term to avoid excessive queries
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500); // 500ms delay
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchTerm]);
+
+  // Reset to first page on search or filter change
+  useEffect(() => {
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    }
+  }, [debouncedSearchTerm, statusFilter]);
 
   const fetchOrders = useCallback(async () => {
     if (!user || roleLoading) return;
 
     setLoading(true);
     try {
-      // Get total count first
-      let countQuery = supabase
-        .from('orders')
-        .select('*', { count: 'exact', head: true });
+      // Base query
+      let query = supabase.from('orders');
+      
+      const buildQuery = (isCount: boolean) => {
+        let q = isCount 
+          ? query.select('*', { count: 'exact', head: true })
+          : query.select(`
+              id, order_number, project_name, status, total_amount, paid_amount,
+              commission, commission_paid, receipt_urls, payment_reference, 
+              payment_date, created_at, user_id
+            `);
 
-      if (!isAdmin) {
-        countQuery = countQuery.eq('user_id', user.id);
-      }
-
-      const { count } = await countQuery;
+        if (!isAdmin) {
+          q = q.eq('user_id', user.id);
+        }
+        if (statusFilter) {
+          q = q.eq('status', statusFilter);
+        }
+        if (debouncedSearchTerm) {
+          q = q.or(`order_number.ilike.%${debouncedSearchTerm}%,project_name.ilike.%${debouncedSearchTerm}%`);
+        }
+        return q;
+      };
+      
+      const countQuery = buildQuery(true);
+      const { count, error: countError } = await countQuery;
+      if (countError) throw countError;
       setTotalCount(count || 0);
 
-      // Get paginated data
       const from = (currentPage - 1) * ORDERS_PER_PAGE;
       const to = from + ORDERS_PER_PAGE - 1;
 
-      let query = supabase
-        .from('orders')
-        .select(`
-          id, order_number, project_name, status, total_amount, paid_amount,
-          commission, commission_paid, receipt_urls, payment_reference, 
-          payment_date, created_at, user_id
-        `)
+      const dataQuery = buildQuery(false)
         .order('created_at', { ascending: false })
         .range(from, to);
-
-      if (!isAdmin) {
-        query = query.eq('user_id', user.id);
-      }
-
-      const { data, error } = await query;
+        
+      const { data, error } = await dataQuery;
 
       if (error) throw error;
 
@@ -85,7 +117,7 @@ export function usePaginatedOrders(): UsePaginatedOrdersReturn {
     } finally {
       setLoading(false);
     }
-  }, [user, isAdmin, roleLoading, currentPage]);
+  }, [user, isAdmin, roleLoading, currentPage, debouncedSearchTerm, statusFilter]);
 
   useEffect(() => {
     fetchOrders();
@@ -127,5 +159,9 @@ export function usePaginatedOrders(): UsePaginatedOrdersReturn {
     totalCount,
     setCurrentPage,
     refetch: fetchOrders,
+    searchTerm,
+    setSearchTerm,
+    statusFilter,
+    setStatusFilter,
   };
 }
