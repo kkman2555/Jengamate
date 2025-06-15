@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -113,7 +114,7 @@ export function useDashboardData() {
         supabase.from('profiles').select('id, full_name, email'),
         supabase.from('orders').select('total_amount, commission, created_at').not('total_amount', 'is', null),
         supabase.from('orders').select('status').not('status', 'is', null),
-        supabase.from('orders').select('total_amount, paid_amount').filter('paid_amount', 'lt', 'col:total_amount'),
+        supabase.from('orders').select('total_amount, paid_amount').gt('total_amount', 0).not('paid_amount', 'is', null),
         supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'Completed').gte('created_at', firstDayOfMonth)
       ]);
 
@@ -128,7 +129,13 @@ export function useDashboardData() {
       
       const profilesMap = new Map(profilesData?.map(p => [p.id, p]));
       const totalRevenue = ordersData?.reduce((sum, order) => sum + (order.total_amount || 0), 0) || 0;
-      const pendingPayments = pendingPaymentsData?.reduce((sum, order) => sum + ((order.total_amount || 0) - (order.paid_amount || 0)), 0) || 0;
+      
+      // Calculate pending payments from the fetched data by filtering in JavaScript
+      const pendingPayments = pendingPaymentsData?.reduce((sum, order) => {
+        const totalAmount = order.total_amount || 0;
+        const paidAmount = order.paid_amount || 0;
+        return totalAmount > paidAmount ? sum + (totalAmount - paidAmount) : sum;
+      }, 0) || 0;
 
       const inquiriesWithType: ActivityItem[] = (recentInquiriesData || []).map(i => ({
           ...i,
