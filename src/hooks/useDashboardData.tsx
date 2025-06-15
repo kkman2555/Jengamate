@@ -10,6 +10,8 @@ interface DashboardData {
   totalInquiries: number;
   activeOrders: number;
   totalRevenue: number;
+  pendingPayments: number;
+  completedThisMonth: number;
   activeUsers: number;
   recentActivity: ActivityItem[];
   revenueTrends: Array<{
@@ -88,6 +90,8 @@ export function useDashboardData() {
     try {
       setLoading(true);
 
+      const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+
       const [
         { count: totalInquiries },
         { count: activeOrders },
@@ -97,7 +101,9 @@ export function useDashboardData() {
         { data: recentOrdersData, error: ordersError },
         { data: profilesData, error: profilesError },
         { data: revenueByMonthData, error: revenueByMonthError },
-        { data: orderStatusData, error: orderStatusError }
+        { data: orderStatusData, error: orderStatusError },
+        { data: pendingPaymentsData, error: pendingPaymentsError },
+        { count: completedThisMonth, error: completedThisMonthError }
       ] = await Promise.all([
         supabase.from('inquiries').select('*', { count: 'exact', head: true }),
         supabase.from('orders').select('*', { count: 'exact', head: true }).not('status', 'eq', 'Completed'),
@@ -108,6 +114,8 @@ export function useDashboardData() {
         supabase.from('profiles').select('id, full_name, email'),
         supabase.from('orders').select('total_amount, commission, created_at').not('total_amount', 'is', null),
         supabase.from('orders').select('status').not('status', 'is', null),
+        supabase.from('orders').select('total_amount, paid_amount').lt('paid_amount', supabase.raw('total_amount')),
+        supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'Completed').gte('created_at', firstDayOfMonth)
       ]);
 
       if (revenueError) throw revenueError;
@@ -116,9 +124,12 @@ export function useDashboardData() {
       if (profilesError) throw profilesError;
       if (revenueByMonthError) throw revenueByMonthError;
       if (orderStatusError) throw orderStatusError;
+      if (pendingPaymentsError) throw pendingPaymentsError;
+      if (completedThisMonthError) throw completedThisMonthError;
       
       const profilesMap = new Map(profilesData?.map(p => [p.id, p]));
       const totalRevenue = ordersData?.reduce((sum, order) => sum + (order.total_amount || 0), 0) || 0;
+      const pendingPayments = pendingPaymentsData?.reduce((sum, order) => sum + ((order.total_amount || 0) - (order.paid_amount || 0)), 0) || 0;
 
       const inquiriesWithType: ActivityItem[] = (recentInquiriesData || []).map(i => ({
           ...i,
@@ -140,6 +151,8 @@ export function useDashboardData() {
         totalInquiries: totalInquiries || 0,
         activeOrders: activeOrders || 0,
         totalRevenue,
+        pendingPayments,
+        completedThisMonth: completedThisMonth || 0,
         activeUsers: activeUsers || 0,
         recentActivity,
         revenueByMonthData,

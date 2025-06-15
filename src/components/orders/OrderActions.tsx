@@ -12,9 +12,10 @@ import { useOrderStatusManagement } from '@/hooks/useOrderStatusManagement';
 interface OrderActionsProps {
   order: any;
   onRefresh: () => void;
+  setOpenModal?: (modal: { open: boolean, orderId?: string }) => void;
 }
 
-export function OrderActions({ order, onRefresh }: OrderActionsProps) {
+export function OrderActions({ order, onRefresh, setOpenModal }: OrderActionsProps) {
   const navigate = useNavigate();
   const { isAdmin } = useUserRole();
   const { updateOrderStatus, verifyPayment, markCommissionPaid } = useOrderStatusManagement(onRefresh);
@@ -29,6 +30,16 @@ export function OrderActions({ order, onRefresh }: OrderActionsProps) {
         <Eye className="mr-1 h-3 w-3" />
         View
       </Button>
+
+      {setOpenModal && !isAdmin && (!order.receipt_urls || order.receipt_urls.length === 0) && (
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => setOpenModal({ open: true, orderId: order.id })}
+        >
+          Mark as Paid
+        </Button>
+      )}
 
       {isAdmin && (
         <>

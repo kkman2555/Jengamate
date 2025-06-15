@@ -1,8 +1,6 @@
-
 import React from 'react';
 import { format } from "date-fns";
-import { Button } from '@/components/ui/button';
-import { Eye } from 'lucide-react';
+import { OrderActions } from './OrderActions';
 import { useNavigate } from 'react-router-dom';
 import { OrderStatusBadge } from './OrderStatusBadge';
 import { OrderPaymentModal } from './OrderPaymentModal';
@@ -101,27 +99,11 @@ export function OrdersTable({ orders, loading, openModal, setOpenModal, onRefres
                     </div>
                   </td>
                   <td className="px-3 py-2 border">
-                    <div className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => navigate(`/orders/${order.id}`)}
-                        className="h-8"
-                      >
-                        <Eye className="mr-1 h-3 w-3" />
-                        View
-                      </Button>
-                      {(!order.receipt_urls || order.receipt_urls.length === 0) && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setOpenModal({ open: true, orderId: order.id })}
-                          className="h-8"
-                        >
-                          Mark as Paid
-                        </Button>
-                      )}
-                    </div>
+                    <OrderActions
+                      order={order}
+                      onRefresh={onRefresh}
+                      setOpenModal={setOpenModal}
+                    />
                   </td>
                 </tr>
               );

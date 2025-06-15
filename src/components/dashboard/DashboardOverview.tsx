@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, ShoppingCart, TrendingUp, Users, Plus, Eye } from 'lucide-react';
+import { FileText, ShoppingCart, TrendingUp, Users, Plus, Eye, CreditCard, CircleCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useDashboardData, ActivityItem } from '@/hooks/useDashboardData';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -102,28 +101,28 @@ export function DashboardOverview() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard
-          title="Total Inquiries"
-          value={data.totalInquiries}
-          description="in total"
-          icon={<FileText className="h-4 w-4 text-muted-foreground" />}
-        />
-        <MetricCard
-          title="Active Orders"
-          value={data.activeOrders}
-          description="currently processing"
-          icon={<ShoppingCart className="h-4 w-4 text-muted-foreground" />}
-        />
-        <MetricCard
           title="Total Revenue"
           value={`TSh${data.totalRevenue.toLocaleString()}`}
           description="from all orders"
           icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />}
         />
         <MetricCard
-          title="Active Users"
-          value={data.activeUsers}
-          description="engineers registered"
-          icon={<Users className="h-4 w-4 text-muted-foreground" />}
+          title="Pending Payments"
+          value={`TSh${data.pendingPayments.toLocaleString()}`}
+          description="across all active orders"
+          icon={<CreditCard className="h-4 w-4 text-muted-foreground" />}
+        />
+        <MetricCard
+          title="Completed Orders"
+          value={data.completedThisMonth}
+          description="this month"
+          icon={<CircleCheck className="h-4 w-4 text-muted-foreground" />}
+        />
+        <MetricCard
+          title="Active Orders"
+          value={data.activeOrders}
+          description="currently processing"
+          icon={<ShoppingCart className="h-4 w-4 text-muted-foreground" />}
         />
       </div>
 

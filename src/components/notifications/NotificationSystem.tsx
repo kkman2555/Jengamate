@@ -3,12 +3,14 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserRole } from '@/hooks/useUserRole';
 import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 export function NotificationSystem() {
   const { user } = useAuth();
+  const { isAdmin } = useUserRole();
   const { toast } = useToast();
   const [notifications, setNotifications] = useState<any[]>([]);
 
@@ -23,26 +25,36 @@ export function NotificationSystem() {
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: '*', // Listen for all changes
           schema: 'public',
           table: 'orders',
-          filter: `user_id=eq.${user.id}`
+          filter: isAdmin ? undefined : `user_id=eq.${user.id}`
         },
         (payload) => {
-          const { new: newOrder, old: oldOrder } = payload;
+          const { new: newOrder, old: oldOrder, eventType } = payload;
           
-          if (newOrder.status !== oldOrder.status) {
+          if (eventType === 'INSERT') {
             toast({
-              title: "Order Status Updated",
-              description: `Order ${newOrder.order_number} status changed to ${newOrder.status}`,
+              title: "New Order Created",
+              description: `Order ${newOrder.order_number} has been placed.`,
             });
+            return;
           }
-          
-          if (newOrder.paid_amount > oldOrder.paid_amount) {
-            toast({
-              title: "Payment Updated",
-              description: `Payment for order ${newOrder.order_number} has been updated`,
-            });
+
+          if (eventType === 'UPDATE' && oldOrder) {
+            if (newOrder.status !== oldOrder.status) {
+              toast({
+                title: "Order Status Updated",
+                description: `Order ${newOrder.order_number} status changed to ${newOrder.status}`,
+              });
+            }
+            
+            if (newOrder.paid_amount > oldOrder.paid_amount) {
+              toast({
+                title: "Payment Updated",
+                description: `Payment for order ${newOrder.order_number} has been updated`,
+              });
+            }
           }
         }
       )
@@ -51,7 +63,7 @@ export function NotificationSystem() {
     return () => {
       supabase.removeChannel(orderChannel);
     };
-  }, [user, toast]);
+  }, [user, toast, isAdmin]);
 
   return (
     <div className="relative">
