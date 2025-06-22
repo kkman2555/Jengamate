@@ -33,6 +33,10 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/admin" element={<Admin />} />
             <Route
+              path="/admin/dashboard"
+              element={<Admin initialTab="dashboard" />}
+            />
+            <Route
               path="/admin/users"
               element={<Admin initialTab="users" />}
             />

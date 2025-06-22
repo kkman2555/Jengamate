@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { Users, FileText, ShoppingCart, LucideIcon } from 'lucide-react';
+import { Users, FileText, ShoppingCart, BarChart3, LucideIcon } from 'lucide-react';
 
 interface Tab {
-  id: 'users' | 'inquiries' | 'orders';
+  id: 'dashboard' | 'users' | 'inquiries' | 'orders';
   label: string;
   icon: LucideIcon;
   count?: number;
@@ -11,7 +11,7 @@ interface Tab {
 
 interface AdminTabsProps {
   activeTab: string;
-  onTabChange: (tabId: 'users' | 'inquiries' | 'orders') => void;
+  onTabChange: (tabId: 'dashboard' | 'users' | 'inquiries' | 'orders') => void;
   userCount?: number;
   inquiryCount?: number;
   orderCount?: number;
@@ -25,6 +25,7 @@ const AdminTabs = ({
   orderCount = 0 
 }: AdminTabsProps) => {
   const tabs: Tab[] = [
+    { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
     { id: 'users', label: 'Users', icon: Users, count: userCount },
     { id: 'inquiries', label: 'Inquiries', icon: FileText, count: inquiryCount },
     { id: 'orders', label: 'Orders', icon: ShoppingCart, count: orderCount },

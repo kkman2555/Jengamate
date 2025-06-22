@@ -8,13 +8,14 @@ import { useToast } from '@/hooks/use-toast';
 import { useAdminData } from '@/hooks/useAdminData';
 import { AppLayout } from '@/components/layout/AppLayout';
 import AdminTabs from '@/components/admin/AdminTabs';
+import AdminDashboard from '@/components/admin/AdminDashboard';
 import UsersTab from '@/components/admin/UsersTab';
 import InquiriesTab from '@/components/admin/InquiriesTab';
 import OrdersTab from '@/components/admin/OrdersTab';
 import { useLocation } from 'react-router-dom';
 
 interface AdminProps {
-  initialTab?: 'users' | 'inquiries' | 'orders';
+  initialTab?: 'dashboard' | 'users' | 'inquiries' | 'orders';
 }
 
 const Admin = ({ initialTab }: AdminProps) => {
@@ -25,12 +26,12 @@ const Admin = ({ initialTab }: AdminProps) => {
   const { users, inquiries, orders, loading, refetch } = useAdminData();
   const location = useLocation();
 
-  // Use tab from props, or fallback to tab in location.state, or default "users"
+  // Use tab from props, or fallback to tab in location.state, or default "dashboard"
   const tabFromState = location.state && typeof location.state === "object" && "activeTab" in location.state
     ? location.state.activeTab
     : undefined;
-  const [activeTab, setActiveTab] = useState<'users' | 'inquiries' | 'orders'>(
-    initialTab || tabFromState || 'users'
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'inquiries' | 'orders'>(
+    initialTab || tabFromState || 'dashboard'
   );
 
   useEffect(() => {
@@ -80,7 +81,7 @@ const Admin = ({ initialTab }: AdminProps) => {
 
         <AdminTabs
           activeTab={activeTab}
-          onTabChange={(tabId: 'users' | 'inquiries' | 'orders') => setActiveTab(tabId)}
+          onTabChange={(tabId: 'dashboard' | 'users' | 'inquiries' | 'orders') => setActiveTab(tabId)}
           userCount={users.length}
           inquiryCount={inquiries.length}
           orderCount={orders.length}
@@ -93,6 +94,9 @@ const Admin = ({ initialTab }: AdminProps) => {
           </div>
         ) : (
           <div className="min-h-[400px]">
+            {activeTab === 'dashboard' && (
+              <AdminDashboard users={users} inquiries={inquiries} orders={orders} />
+            )}
             {activeTab === 'users' && (
               <UsersTab users={users} onRefresh={refetch} />
             )}
