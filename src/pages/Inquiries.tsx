@@ -91,7 +91,13 @@ const Inquiries = () => {
         ) : filteredInquiries && filteredInquiries.length > 0 ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {filteredInquiries.map(inquiry => (
-              <InquiryCard key={inquiry.id} inquiry={inquiry} />
+              <InquiryCard 
+                key={inquiry.id} 
+                inquiry={{
+                  ...inquiry,
+                  products: Array.isArray(inquiry.products) ? inquiry.products : []
+                }} 
+              />
             ))}
           </div>
         ) : (

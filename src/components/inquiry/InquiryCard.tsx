@@ -12,17 +12,17 @@ interface InquiryCardProps {
     id: string;
     inquiry_number: string;
     project_name: string;
-    project_type?: string;
-    status: string;
-    total_amount: number;
-    expected_date: string;
-    delivery_address: string;
-    needs_transport: boolean;
+    project_type?: string | null;
+    status: string | null;
+    total_amount: number | null;
+    expected_date: string | null;
+    delivery_address: string | null;
+    needs_transport: boolean | null;
     products: string[];
-    project_description?: string;
-    contact_person?: string;
-    phone_number?: string;
-    created_at: string;
+    project_description?: string | null;
+    contact_person?: string | null;
+    phone_number?: string | null;
+    created_at: string | null;
   };
 }
 
@@ -66,8 +66,8 @@ export function InquiryCard({ inquiry }: InquiryCardProps) {
             </CardDescription>
           </div>
           <Badge 
-            variant={getStatusVariant(inquiry.status)} 
-            className={getStatusColor(inquiry.status)}
+            variant={getStatusVariant(inquiry.status || 'Pending')} 
+            className={getStatusColor(inquiry.status || 'Pending')}
           >
             {inquiry.status || 'Pending'}
           </Badge>
@@ -87,15 +87,19 @@ export function InquiryCard({ inquiry }: InquiryCardProps) {
             <span>TSh {inquiry.total_amount?.toLocaleString() || 0}</span>
           </div>
           
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-            <span>{format(new Date(inquiry.expected_date), 'MMM dd, yyyy')}</span>
-          </div>
+          {inquiry.expected_date && (
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <span>{format(new Date(inquiry.expected_date), 'MMM dd, yyyy')}</span>
+            </div>
+          )}
           
-          <div className="flex items-center gap-2 col-span-2">
-            <MapPin className="h-4 w-4 text-muted-foreground" />
-            <span className="truncate">{inquiry.delivery_address}</span>
-          </div>
+          {inquiry.delivery_address && (
+            <div className="flex items-center gap-2 col-span-2">
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              <span className="truncate">{inquiry.delivery_address}</span>
+            </div>
+          )}
         </div>
 
         {inquiry.products && inquiry.products.length > 0 && (
@@ -133,7 +137,7 @@ export function InquiryCard({ inquiry }: InquiryCardProps) {
 
       <CardFooter className="flex justify-between items-center">
         <span className="text-xs text-muted-foreground">
-          Submitted {format(new Date(inquiry.created_at), 'PPP')}
+          {inquiry.created_at && `Submitted ${format(new Date(inquiry.created_at), 'PPP')}`}
         </span>
         <Button 
           variant="outline" 
