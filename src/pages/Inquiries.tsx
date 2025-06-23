@@ -1,76 +1,97 @@
 
 import React from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, FileText, Loader2 } from 'lucide-react';
+import { Plus, FileText, Loader2, Search } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 import { useUserRole } from '@/hooks/useUserRole';
-import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
 import { useInquiries } from '@/hooks/useInquiries';
+import { InquiryCard } from '@/components/inquiry/InquiryCard';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const Inquiries = () => {
   const navigate = useNavigate();
   const { isAdmin } = useUserRole();
   const { inquiries, isLoading: pageIsLoading } = useInquiries();
+  const [searchTerm, setSearchTerm] = React.useState('');
+  const [statusFilter, setStatusFilter] = React.useState('all');
 
-  const getStatusVariant = (status: string): "default" | "destructive" | "outline" | "secondary" | null | undefined => {
-    switch (status) {
-      case 'Pending': return 'default';
-      case 'Quoted': return 'outline';
-      case 'Accepted': return 'secondary';
-      case 'Rejected': return 'destructive';
-      default: return 'default';
-    }
-  };
+  // Filter inquiries based on search term and status
+  const filteredInquiries = React.useMemo(() => {
+    if (!inquiries) return [];
+    
+    return inquiries.filter(inquiry => {
+      const matchesSearch = searchTerm === '' || 
+        inquiry.project_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        inquiry.inquiry_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (inquiry.project_type && inquiry.project_type.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+      const matchesStatus = statusFilter === 'all' || inquiry.status === statusFilter;
+      
+      return matchesSearch && matchesStatus;
+    });
+  }, [inquiries, searchTerm, statusFilter]);
   
   return (
     <AppLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Inquiries</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Project Inquiries</h1>
             <p className="text-muted-foreground">
               {isAdmin ? "Review and manage all user inquiries." : "Manage your project inquiries and quotations"}
             </p>
           </div>
-          <Button className="gap-2" onClick={() => navigate("/inquiries/new")}>
-            <Plus className="h-4 w-4" />
-            New Inquiry
-          </Button>
+          {!isAdmin && (
+            <Button className="gap-2" onClick={() => navigate("/inquiries/new")}>
+              <Plus className="h-4 w-4" />
+              New Inquiry
+            </Button>
+          )}
         </div>
 
+        {/* Filters */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search inquiries by name, number, or type..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-[200px]">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="Pending">Pending</SelectItem>
+                  <SelectItem value="Quoted">Quoted</SelectItem>
+                  <SelectItem value="Accepted">Accepted</SelectItem>
+                  <SelectItem value="Rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
         {pageIsLoading ? (
-          <div className="flex justify-center items-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <div className="flex justify-center items-center py-12">
+            <div className="text-center">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">Loading inquiries...</p>
+            </div>
           </div>
-        ) : inquiries && inquiries.length > 0 ? (
+        ) : filteredInquiries && filteredInquiries.length > 0 ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {inquiries.map(inquiry => (
-              <Card key={inquiry.id}>
-                <CardHeader>
-                  <CardTitle>{inquiry.project_name}</CardTitle>
-                  <CardDescription>Inquiry #{inquiry.inquiry_number}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">Status</span>
-                    <Badge variant={getStatusVariant(inquiry.status || 'Pending')}>{inquiry.status}</Badge>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Amount</span>
-                    <span className="font-medium">TSh {inquiry.total_amount?.toLocaleString() || 0}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Submitted</span>
-                    <span className="font-medium">{inquiry.created_at ? format(new Date(inquiry.created_at), 'PPP') : 'N/A'}</span>
-                  </div>
-                </CardContent>
-                <CardFooter>
-                    <Button variant="outline" className="w-full" onClick={() => navigate(`/inquiries/${inquiry.id}`)}>View Details</Button>
-                </CardFooter>
-              </Card>
+            {filteredInquiries.map(inquiry => (
+              <InquiryCard key={inquiry.id} inquiry={inquiry} />
             ))}
           </div>
         ) : (
@@ -78,17 +99,27 @@ const Inquiries = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                No Inquiries Found
+                {searchTerm || statusFilter !== 'all' ? 'No Matching Inquiries' : 'No Inquiries Found'}
               </CardTitle>
               <CardDescription>
-                {isAdmin ? "There are no inquiries from any user yet." : "You haven't submitted any inquiries yet."}
+                {searchTerm || statusFilter !== 'all' 
+                  ? "Try adjusting your search terms or filters."
+                  : isAdmin 
+                    ? "There are no inquiries from any user yet." 
+                    : "You haven't submitted any inquiries yet."
+                }
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="text-center text-muted-foreground py-8">
-                <p>{isAdmin ? "" : 'Click "New Inquiry" to get started.'}</p>
-              </div>
-            </CardContent>
+            {!isAdmin && !searchTerm && statusFilter === 'all' && (
+              <CardContent>
+                <div className="text-center py-8">
+                  <Button onClick={() => navigate("/inquiries/new")} className="gap-2">
+                    <Plus className="h-4 w-4" />
+                    Create Your First Inquiry
+                  </Button>
+                </div>
+              </CardContent>
+            )}
           </Card>
         )}
       </div>
