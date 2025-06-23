@@ -95,7 +95,7 @@ const Inquiries = () => {
                 key={inquiry.id} 
                 inquiry={{
                   ...inquiry,
-                  products: Array.isArray(inquiry.products) ? inquiry.products : []
+                  products: Array.isArray(inquiry.products) ? inquiry.products as string[] : []
                 }} 
               />
             ))}

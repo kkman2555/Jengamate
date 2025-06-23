@@ -19,7 +19,7 @@ const inquiryFormSchema = z.object({
   expected_date: z.string().refine(val => val && !isNaN(Date.parse(val)), { message: "A valid expected date is required" }),
   delivery_address: z.string().min(1, { message: "Delivery address is required" }),
   needs_transport: z.boolean().default(false),
-  products: z.array(z.string()).min(1, { message: "At least one product/service is required" }),
+  products: z.array(z.string().min(1, { message: "Product/service cannot be empty" })).min(1, { message: "At least one product/service is required" }),
   project_description: z.string().min(10, { message: "Please provide a detailed project description (minimum 10 characters)" }),
   specifications: z.string().optional(),
   contact_person: z.string().min(1, { message: "Contact person is required" }),
@@ -50,7 +50,7 @@ export function InquiryForm({ onSubmit, isSubmitting }: InquiryFormProps) {
     defaultValues: {
       project_name: "",
       project_type: "",
-      total_amount: undefined,
+      total_amount: 0,
       expected_date: "",
       delivery_address: "",
       needs_transport: false,

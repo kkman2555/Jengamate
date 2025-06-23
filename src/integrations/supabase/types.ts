@@ -12,14 +12,19 @@ export type Database = {
       inquiries: {
         Row: {
           commission: number | null
+          contact_person: string | null
           created_at: string | null
           delivery_address: string | null
           expected_date: string | null
           id: string
           inquiry_number: string
           needs_transport: boolean | null
+          phone_number: string | null
           products: Json | null
+          project_description: string | null
           project_name: string
+          project_type: string | null
+          specifications: string | null
           status: string | null
           total_amount: number | null
           updated_at: string | null
@@ -27,14 +32,19 @@ export type Database = {
         }
         Insert: {
           commission?: number | null
+          contact_person?: string | null
           created_at?: string | null
           delivery_address?: string | null
           expected_date?: string | null
           id?: string
           inquiry_number: string
           needs_transport?: boolean | null
+          phone_number?: string | null
           products?: Json | null
+          project_description?: string | null
           project_name: string
+          project_type?: string | null
+          specifications?: string | null
           status?: string | null
           total_amount?: number | null
           updated_at?: string | null
@@ -42,14 +52,19 @@ export type Database = {
         }
         Update: {
           commission?: number | null
+          contact_person?: string | null
           created_at?: string | null
           delivery_address?: string | null
           expected_date?: string | null
           id?: string
           inquiry_number?: string
           needs_transport?: boolean | null
+          phone_number?: string | null
           products?: Json | null
+          project_description?: string | null
           project_name?: string
+          project_type?: string | null
+          specifications?: string | null
           status?: string | null
           total_amount?: number | null
           updated_at?: string | null
