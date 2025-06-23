@@ -1,5 +1,6 @@
+
 import React from "react";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, FieldArrayWithId } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -63,11 +64,11 @@ export function InquiryForm({ onSubmit, isSubmitting }: InquiryFormProps) {
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
-    name: "products",
+    name: "products" as const,
   });
 
   const addProduct = () => {
-    append("");
+    append("" as string);
   };
 
   const removeProduct = (index: number) => {
