@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -68,7 +67,7 @@ export function InquiryForm({ onSubmit, isSubmitting }: InquiryFormProps) {
   });
 
   const addProduct = () => {
-    append("");
+    append("" as string);
   };
 
   const removeProduct = (index: number) => {
