@@ -1,5 +1,3 @@
-
-
 import React from "react";
 import { useForm, useFieldArray, FieldArrayWithId } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -63,7 +61,7 @@ export function InquiryForm({ onSubmit, isSubmitting }: InquiryFormProps) {
     },
   });
 
-  const { fields, append, remove } = useFieldArray<InquiryFormValues, "products">({
+  const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "products",
   });
@@ -342,4 +340,3 @@ export function InquiryForm({ onSubmit, isSubmitting }: InquiryFormProps) {
     </Form>
   );
 }
-
