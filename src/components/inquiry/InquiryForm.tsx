@@ -50,7 +50,7 @@ export function InquiryForm({ onSubmit, isSubmitting }: InquiryFormProps) {
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove } = useFieldArray<InquiryFormValues, "products">({
     control: form.control,
     name: "products",
   });
